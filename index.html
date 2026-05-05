@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanzas — Bruno</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finanzas">
+<meta name="theme-color" content="#f59e0b">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --background:  #fbfbfd;
+  --foreground:  #1d1d1f;
+  --card:        #ffffff;
+  --primary:     #0071e3;
+  --primary-foreground: #ffffff;
+  --secondary:   #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted:       #f5f5f7;
+  --muted-foreground: #86868b;
+  --accent:      #e8f2ff;
+  --accent-foreground: #0071e3;
+  --border:      #d2d2d7;
+  --input:       #d2d2d7;
+  --ring:        #0071e3;
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+  --sidebar:     #f5f5f7;
+  --radius:      0.75rem;
+  --shadow:      0px 4px 16px rgba(0,113,227,0.07), 0px 1px 3px rgba(0,0,0,0.04);
+  --font-sans:   -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono:   'SF Mono', SFMono-Regular, 'IBM Plex Mono', ui-monospace, monospace;
+  --font-serif:  Georgia, serif;
+
+  --green:    #34c759;
+  --green-fg: #e3fae9;
+  --red:      #ff3b30;
+  --red-fg:   #ffedec;
+  --blue:     #0071e3;
+  --blue-fg:  #e8f2ff;
+}
+
+[data-theme="dark"] {
+  --background:  #000000;
+  --foreground:  #f5f5f7;
+  --card:        #1c1c1e;
+  --primary:     #0a84ff;
+  --primary-foreground: #ffffff;
+  --secondary:   #2c2c2e;
+  --secondary-foreground: #f5f5f7;
+  --muted:       #2c2c2e;
+  --muted-foreground: #86868b;
+  --accent:      #0a1929;
+  --accent-foreground: #0a84ff;
+  --border:      #38383a;
+  --input:       #38383a;
+  --ring:        #0a84ff;
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+  --sidebar:     #111111;
+  --shadow:      0px 8px 32px rgba(10,132,255,0.12), 0px 1px 3px rgba(0,0,0,0.2);
+
+  --green:    #30d158;
+  --green-fg: #0d2e18;
+  --red:      #ff453a;
+  --red-fg:   #2e0d0d;
+  --blue:     #0a84ff;
+  --blue-fg:  #0a1929;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.011em;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-logo {
+  width: 30px; height: 30px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.header-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+.header-title span { color: var(--muted-foreground); font-weight: 400; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.month-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+.month-select:focus { border-color: var(--ring); box-shadow: 0 0 0 3px rgba(0,113,227,0.18); }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-ghost:hover { background: var(--secondary); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: calc(100vh - 56px); }
+
+/* ── SIDEBAR NAV ── */
+.sidenav {
+  width: 200px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  padding: 12px 8px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  padding: 8px 8px 4px;
+  margin-top: 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: all 0.12s;
+}
+.nav-item:hover { background: var(--secondary); color: var(--foreground); }
+.nav-item.active { background: var(--accent); color: var(--primary); font-weight: 600; }
+.nav-item .icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+/* ── MAIN ── */
+.main { flex: 1; padding: 24px; overflow-x: hidden; min-width: 0; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 20px; }
+.page-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.page-sub { font-size: 13px; color: var(--muted-foreground); margin-top: 2px; }
+
+/* ── CARDS ── */
+.cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+@media(max-width:700px){ .cards { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted-foreground);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.card-value.green { color: var(--green); }
+.card-value.red { color: var(--red); }
+.card-value.amber { color: var(--blue); }
+.card-value.blue { color: var(--blue); }
+.card-sub { font-size: 12px; color: var(--muted-foreground); margin-top: 4px; }
+
+/* ── CHART BOX ── */
+.chart-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:800px){ .charts-row { grid-template-columns: 1fr; } }
+.chart-box-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* DIST LIST */
+.dist-item { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.dist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dist-label { flex: 0 0 90px; font-size: 12px; font-weight: 500; }
+.dist-bar-wrap { flex: 1; height: 5px; background: var(--secondary); border-radius: 99px; overflow: hidden; }
+.dist-bar { height: 5px; border-radius: 99px; }
+.dist-pct { font-family: var(--font-mono); font-size: 11px; color: var(--muted-foreground); min-width: 32px; text-align: right; }
+
+/* ── FORM ── */
+.form-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 600px; box-shadow: var(--shadow); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media(max-width:580px){ .form-grid { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.full { grid-column: 1/-1; }
+label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+}
+input, select, textarea {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  padding: 8px 11px;
+  outline: none;
+  border-radius: var(--radius);
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(0,113,227,0.18);
+}
+textarea { resize: vertical; min-height: 68px; }
+
+/* TIPO TABS */
+.tipo-group { display: flex; background: var(--secondary); border-radius: var(--radius); padding: 3px; gap: 3px; }
+.tipo-btn {
+  flex: 1; padding: 7px 8px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+  color: var(--muted-foreground);
+  border-radius: calc(var(--radius) - 2px);
+  transition: all 0.15s;
+}
+.tipo-btn:hover { color: var(--foreground); }
+.tipo-btn.active-ingreso { background: var(--green-fg); color: var(--green); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.tipo-btn.active-gasto { background: var(--red-fg); color: var(--red); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.tipo-btn.active-ahorro { background: var(--accent); color: var(--accent-foreground); box-shadow: var(--shadow); }
+.tipo-btn.active-evol { background: var(--card); color: var(--foreground); box-shadow: var(--shadow); }
+
+/* BUTTONS */
+.btn-primary {
+  padding: 9px 16px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none; cursor: pointer;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  border-radius: var(--radius);
+  transition: opacity 0.15s, transform 0.1s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-secondary {
+  padding: 8px 14px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border); cursor: pointer;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.btn-secondary:hover { background: var(--border); }
+.btn-destructive {
+  padding: 7px 12px;
+  background: transparent; color: var(--destructive);
+  border: 1px solid var(--border); cursor: pointer;
+  font-size: 12px; font-weight: 500;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-destructive:hover { background: var(--red-fg); border-color: var(--destructive); }
+
+.toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.toolbar-left { flex: 1; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.toast {
+  display: none;
+  padding: 9px 13px; font-size: 12px; margin-top: 10px;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+.toast.show { display: block; }
+.toast.ok { background: var(--green-fg); color: var(--green); border: 1px solid var(--green); }
+.toast.err { background: var(--red-fg); color: var(--red); border: 1px solid var(--red); }
+
+/* ── TABLE ── */
+.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.table-wrap table { width: 100%; border-collapse: collapse; }
+.table-wrap thead th {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 10px 14px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.table-wrap tbody td {
+  padding: 11px 14px; font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.table-wrap tbody tr:last-child td { border-bottom: none; }
+.table-wrap tbody tr:hover td { background: var(--muted); }
+
+/* BADGES */
+.badge {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 2px 8px; border-radius: 99px;
+  display: inline-block; white-space: nowrap;
+}
+.badge-ingreso { background: var(--green-fg); color: var(--green); }
+.badge-gasto { background: var(--red-fg); color: var(--red); }
+.badge-ahorro { background: var(--accent); color: var(--accent-foreground); }
+
+.mono { font-family: var(--font-mono); font-weight: 600; }
+.mono.green { color: var(--green); }
+.mono.red { color: var(--red); }
+.mono.amber { color: var(--blue); }
+.mono.blue { color: var(--blue); }
+
+.btn-icon {
+  background: transparent; border: 1px solid var(--border);
+  cursor: pointer; color: var(--muted-foreground);
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; border-radius: var(--radius);
+  transition: all 0.15s;
+}
+.btn-icon:hover { background: var(--secondary); color: var(--foreground); }
+.btn-icon.del:hover { background: var(--red-fg); color: var(--red); border-color: var(--destructive); }
+.btn-icon.edit:hover { background: var(--accent); color: var(--accent-foreground); border-color: var(--ring); }
+.actions-cell { display: flex; gap: 5px; }
+
+.empty {
+  background: var(--muted); border-radius: var(--radius);
+  padding: 40px; text-align: center;
+  color: var(--muted-foreground); font-size: 13px; font-weight: 500;
+}
+
+/* ── META / PROGRESS ── */
+.progress-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+.progress-info .val { font-family: var(--font-mono); font-weight: 700; }
+.progress-bar-bg { background: var(--secondary); height: 8px; border-radius: 99px; overflow: hidden; }
+.progress-bar { height: 8px; border-radius: 99px; background: var(--primary); transition: width 0.4s ease; }
+.progress-bar.ok { background: var(--green); }
+.progress-pct { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-top: 8px; color: var(--primary); }
+.progress-pct.ok { color: var(--green); }
+
+/* ── DESTINOS ── */
+.destinos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.destino-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: box-shadow 0.15s; }
+.destino-card:hover { box-shadow: 0 8px 24px -4px hsla(0,0%,0%,0.12); }
+.destino-img-wrap { width: 100%; height: 140px; overflow: hidden; background: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+.destino-img-wrap img { width: 100%; height: 140px; object-fit: cover; display: block; }
+.destino-body { padding: 14px; }
+.destino-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.destino-desc { font-size: 12px; color: var(--muted-foreground); margin-bottom: 10px; }
+.destino-prog-bg { background: var(--secondary); height: 5px; border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+.destino-prog { height: 5px; border-radius: 99px; background: var(--primary); transition: width 0.3s; }
+.destino-prog.ok { background: var(--green); }
+.destino-nums { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: var(--muted-foreground); }
+.destino-nums .cur { color: var(--blue); font-weight: 700; }
+.destino-nums .cur.ok { color: var(--green); }
+.destino-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+/* ── CATEGORÍAS ── */
+.cat-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.cat-chip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 10px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 99px;
+  font-size: 12px; font-weight: 500;
+  box-shadow: var(--shadow);
+}
+.cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cat-chip-btns { display: flex; gap: 2px; margin-left: 2px; }
+.cat-chip-btns button { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--muted-foreground); padding: 1px 3px; border-radius: 3px; transition: all 0.12s; }
+.cat-chip-btns button:hover { color: var(--foreground); background: var(--secondary); }
+.cat-chip-btns button.del:hover { color: var(--destructive); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4); z-index: 50;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: calc(var(--radius)*2);
+  padding: 24px; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+  margin: 16px; box-shadow: 0 20px 60px -10px rgba(0,0,0,0.2);
+}
+.modal-title {
+  font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+  margin-bottom: 18px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--muted-foreground); line-height: 1; border-radius: var(--radius); padding: 2px 6px; transition: all 0.12s; }
+.modal-close:hover { background: var(--secondary); color: var(--foreground); }
+.modal-footer { display: flex; gap: 8px; margin-top: 18px; justify-content: flex-end; }
+.modal-inner { display: flex; flex-direction: column; gap: 14px; }
+
+/* PALETTE */
+.color-options { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.color-opt { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.12s, transform 0.12s; }
+.color-opt:hover { transform: scale(1.15); }
+.color-opt.sel { border-color: var(--foreground); transform: scale(1.1); }
+
+/* IMPORT */
+.import-drop {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 32px; text-align: center; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.import-drop:hover { border-color: var(--ring); background: var(--accent); }
+.import-drop-icon { font-size: 32px; margin-bottom: 10px; }
+.import-drop-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.import-drop-sub { font-size: 12px; color: var(--muted-foreground); }
+
+.import-map-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.import-map-label { min-width: 110px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-foreground); }
+
+/* EXPORT ROW */
+.export-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+/* SEPARATOR */
+.sep { height: 1px; background: var(--border); margin: 8px 0; }
+
+/* DARK TOGGLE */
+.theme-toggle { font-size: 16px; cursor: pointer; background: none; border: 1px solid var(--border); border-radius: var(--radius); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; color: var(--foreground); }
+.theme-toggle:hover { background: var(--secondary); }
+
+/* MOBILE NAV */
+@media(max-width:640px){
+  .sidenav { display: none; }
+  .layout { flex-direction: column; }
+  .mobile-tabs { display: flex; overflow-x: auto; gap: 0; background: var(--card); border-bottom: 1px solid var(--border); scrollbar-width: none; }
+  .mobile-tabs::-webkit-scrollbar { display: none; }
+  .mobile-tab { flex-shrink: 0; padding: 10px 14px; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--muted-foreground); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .mobile-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+}
+@media(min-width:641px){
+  .mobile-tabs { display: none; }
+}
+
+/* SECTION ANIMATION */
+.section.active { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* PWA INSTALL BANNER */
+.pwa-banner {
+  display: none;
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: var(--foreground); color: var(--background);
+  padding: 12px 18px; border-radius: calc(var(--radius)*2);
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  z-index: 200; white-space: nowrap;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { opacity:0; transform: translateX(-50%) translateY(20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+.pwa-banner.hidden { display: none !important; }
+.pwa-banner-btn { background: var(--primary); color: var(--primary-foreground); border: none; padding: 7px 14px; border-radius: var(--radius); cursor: pointer; font-size: 12px; font-weight: 700; }
+.pwa-banner-close { background: none; border: none; color: var(--background); cursor: pointer; font-size: 18px; opacity: 0.6; padding: 0 2px; }
+
+/* BACKUP REMINDER */
+.backup-bar {
+  background: var(--accent); border-bottom: 1px solid var(--border);
+  padding: 8px 20px; font-size: 12px; font-weight: 500;
+  color: var(--accent-foreground);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.backup-bar a { color: var(--accent-foreground); font-weight: 700; cursor: pointer; text-decoration: underline; }
+.backup-bar-close { background: none; border: none; cursor: pointer; color: var(--accent-foreground); font-size: 16px; opacity: 0.7; }
+
+/* PRIMARY RING FOCUS */
+*:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* ALERTA CARDS */
+.alerta-item { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.alerta-item:last-child { border-bottom:none; }
+.alerta-icon { font-size:20px; flex-shrink:0; }
+.alerta-body { flex:1; }
+.alerta-title { font-size:13px; font-weight:600; margin-bottom:3px; }
+.alerta-sub { font-size:12px; color:var(--muted-foreground); }
+.alerta-badge { font-family:var(--font-mono); font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; flex-shrink:0; }
+.badge-warn { background:var(--red-fg); color:var(--red); }
+.badge-ok   { background:var(--green-fg); color:var(--green); }
+.badge-info { background:var(--blue-fg); color:var(--blue); }
+
+/* COMPARATIVA BARS */
+.comp-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:13px; }
+.comp-label { min-width:120px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.comp-bars { flex:1; display:flex; flex-direction:column; gap:3px; }
+.comp-bar-row { display:flex; align-items:center; gap:6px; }
+.comp-bar-bg { flex:1; height:6px; background:var(--secondary); border-radius:99px; overflow:hidden; }
+.comp-bar-fill { height:6px; border-radius:99px; transition:width 0.4s; }
+.comp-val { font-family:var(--font-mono); font-size:11px; min-width:80px; text-align:right; color:var(--muted-foreground); }
+.comp-delta { font-family:var(--font-mono); font-size:11px; font-weight:700; min-width:50px; text-align:right; }
+.comp-delta.up { color:var(--red); }
+.comp-delta.down { color:var(--green); }
+
+/* HEATMAP */
+.heatmap-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; min-width:320px; }
+.heatmap-day { aspect-ratio:1; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-family:var(--font-mono); font-weight:600; cursor:default; transition:transform 0.1s; }
+.heatmap-day:hover { transform:scale(1.15); }
+.heatmap-label { font-size:10px; text-align:center; color:var(--muted-foreground); padding-bottom:4px; font-family:var(--font-mono); }
+
+/* SYNC BUTTON */
+.btn-sync {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius);
+  cursor: pointer; font-size: 12px; font-weight: 600;
+  font-family: var(--font-sans);
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn-sync:hover { opacity: 0.88; }
+.btn-sync:active { transform: scale(0.97); }
+.btn-sync.syncing #syncIcon { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* SYNC STATUS BAR */
+.sync-bar {
+  padding: 7px 20px; font-size: 12px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.sync-bar.ok  { background: var(--green-fg); color: var(--green); }
+.sync-bar.err { background: var(--red-fg);   color: var(--red); }
+.sync-bar.loading { background: var(--accent); color: var(--accent-foreground); }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* SETUP SCREEN */
+.setup-screen {
+  position: fixed; inset: 0; background: var(--background);
+  z-index: 60; display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.setup-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: calc(var(--radius)*2); padding: 36px;
+  max-width: 540px; width: 100%;
+  box-shadow: var(--shadow);
+}
+.setup-logo { font-size: 40px; margin-bottom: 16px; }
+.setup-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+.setup-sub { font-size: 14px; color: var(--muted-foreground); margin-bottom: 28px; line-height: 1.5; }
+.setup-steps { margin-bottom: 24px; }
+.setup-step {
+  display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start;
+}
+.setup-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.setup-step-text { font-size: 13px; line-height: 1.5; }
+.setup-step-text strong { font-weight: 600; }
+.setup-step-text code {
+  font-family: var(--font-mono); font-size: 12px;
+  background: var(--secondary); padding: 1px 6px;
+  border-radius: 4px; color: var(--primary);
+}
+.setup-input-row { display: flex; gap: 8px; }
+.setup-input-row input { flex: 1; font-size: 13px; }
+.skip-link { text-align: center; margin-top: 14px; font-size: 12px; color: var(--muted-foreground); }
+.skip-link a { color: var(--primary); cursor: pointer; text-decoration: underline; }
+
+/* CLEAN NUMERALS — no slashed zeros anywhere */
+.mono, .card-value, .progress-pct, .hist-monto, [style*="font-family: var(--font-mono)"],
+.font-mono { font-variant-numeric: normal; font-feature-settings: "zero" 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">💰</div>
+    <div class="header-title">Finanzas <span>/ Bruno</span></div>
+  </div>
+  <div class="header-right">
+    <button class="btn-sync" id="syncBtn" onclick="syncFromSheet()" title="Sincronizar con Google Sheets">
+      <span id="syncIcon">⟳</span> Sincronizar
+    </button>
+    <select class="month-select" id="periodMode" onchange="onPeriodModeChange()" style="min-width:100px">
+      <option value="month">Mensual</option>
+      <option value="quarter">Trimestral</option>
+      <option value="semester">Semestral</option>
+      <option value="year">Anual</option>
+      <option value="day">Diario</option>
+    </select>
+    <select class="month-select" id="periodValue" onchange="onPeriodChange()" style="min-width:160px"></select>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" id="themeBtn">🌙</button>
+  </div>
+</header>
+
+<!-- BACKUP REMINDER BAR -->
+<div class="backup-bar" id="backupBar" style="display:none">
+  <span>💾 Tus datos solo existen en este dispositivo. <a onclick="exportBackupJSON()">Descargá un backup</a> antes de cerrar o cambiar de versión.</span>
+  <button class="backup-bar-close" onclick="document.getElementById('backupBar').style.display='none'">×</button>
+</div>
+
+<!-- PWA INSTALL BANNER -->
+<div class="pwa-banner hidden" id="pwaBanner">
+  <span>📱 Agregá esta app a tu pantalla de inicio</span>
+  <button class="pwa-banner-btn" id="pwaInstallBtn">Instalar</button>
+  <button class="pwa-banner-close" onclick="document.getElementById('pwaBanner').classList.add('hidden')">×</button>
+</div>
+
+<!-- MOBILE TABS -->
+<nav class="mobile-tabs" id="mobileTabs">
+  <button class="mobile-tab active" onclick="switchTab('resumen',this,true)">📊 Resumen</button>
+  <button class="mobile-tab" onclick="switchTab('cargar',this,true)">➕ Cargar</button>
+  <button class="mobile-tab" onclick="switchTab('historial',this,true)">📋 Historial</button>
+  <button class="mobile-tab" onclick="switchTab('evolucion',this,true)">📈 Evolución</button>
+  <button class="mobile-tab" onclick="switchTab('meta',this,true)">🎯 Meta</button>
+  <button class="mobile-tab" onclick="switchTab('destinos',this,true)">🗺 Destinos</button>
+  <button class="mobile-tab" onclick="switchTab('categorias',this,true)">🏷 Cats</button>
+  <button class="mobile-tab" onclick="switchTab('importar',this,true)">📂 Importar</button>
+  <button class="mobile-tab" onclick="switchTab('sheets',this,true)">🔗 Sheets</button>
+  <button class="mobile-tab" onclick="switchTab('config',this,true)">⚙️ Config</button>
+  <button class="mobile-tab" onclick="switchTab('analisis',this,true)">🧠 Análisis</button>
+  <button class="mobile-tab" onclick="switchTab('visual',this,true)">📉 Visual</button>
+</nav>
+
+<!-- SETUP SCREEN (shown when no API URL is configured) -->
+<div class="setup-screen" id="setupScreen" style="display:none">
+  <div class="setup-card">
+    <div class="setup-logo">🔗</div>
+    <div class="setup-title">Conectar Google Sheets</div>
+    <div class="setup-sub">Para vincular tu planilla, seguí estos pasos una sola vez. Tarda 5 minutos.</div>
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="setup-step-num">1</div>
+        <div class="setup-step-text">Abrí tu Google Sheet → <strong>Extensiones → Apps Script</strong></div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-step-num">2</div>
+        <div class="setup-step-text">Pegá el código que descargaste con el dashboard (<code>apps_script.js</code>). Cambiá <code>SHEET_NAMES</code> por los nombres reales de tus pestañas.</div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-step-num">3</div>
+        <div class="setup-step-text"><strong>Implementar → Nueva implementación</strong> → Tipo: <code>Aplicación web</code> → Acceso: <code>Cualquier persona</code> → Copiá la URL.</div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-step-num">4</div>
+        <div class="setup-step-text">Pegá la URL acá abajo y listo.</div>
+      </div>
+    </div>
+    <div class="setup-input-row">
+      <input type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/..." style="font-size:13px">
+      <button class="btn-primary" onclick="saveApiUrl()">Conectar</button>
+    </div>
+    <div class="skip-link"><a onclick="skipSetup()">Usar sin Google Sheets →</a></div>
+  </div>
+</div>
+
+<!-- SYNC STATUS BAR -->
+<div class="sync-bar" id="syncBar" style="display:none">
+  <div class="sync-dot"></div>
+  <span id="syncBarMsg">Sincronizando...</span>
+  <span style="margin-left:auto;opacity:0.6;font-size:11px" id="syncBarTime"></span>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidenav">
+    <div class="nav-label">Principal</div>
+    <button class="nav-item active" onclick="switchTab('resumen',this)"><span class="icon">📊</span>Resumen</button>
+    <button class="nav-item" onclick="switchTab('cargar',this)"><span class="icon">➕</span>Cargar</button>
+    <button class="nav-item" onclick="switchTab('historial',this)"><span class="icon">📋</span>Historial</button>
+    <button class="nav-item" onclick="switchTab('evolucion',this)"><span class="icon">📈</span>Evolución</button>
+    <div class="nav-label">Ahorro</div>
+    <button class="nav-item" onclick="switchTab('meta',this)"><span class="icon">🎯</span>Meta mensual</button>
+    <button class="nav-item" onclick="switchTab('destinos',this)"><span class="icon">🗺</span>Destinos</button>
+    <div class="nav-label">Config</div>
+    <button class="nav-item" onclick="switchTab('categorias',this)"><span class="icon">🏷</span>Categorías</button>
+    <button class="nav-item" onclick="switchTab('importar',this)"><span class="icon">📂</span>Importar</button>
+    <button class="nav-item" onclick="switchTab('sheets',this)"><span class="icon">🔗</span>Google Sheets</button>
+    <button class="nav-item" onclick="switchTab('config',this)"><span class="icon">⚙️</span>Configuración</button>
+    <div class="nav-label">Análisis</div>
+    <button class="nav-item" onclick="switchTab('analisis',this)"><span class="icon">🧠</span>Inteligente</button>
+    <button class="nav-item" onclick="switchTab('visual',this)"><span class="icon">📉</span>Visual</button>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- RESUMEN -->
+    <div class="section active" id="tab-resumen">
+      <div class="page-header">
+        <div class="page-title">Resumen</div>
+        <div class="page-sub" id="resumen-month-label">—</div>
+      </div>
+      <div class="export-row">
+        <button class="btn-secondary" onclick="exportResumenPDF()">⬇ PDF resumen</button>
+      </div>
+      <div class="cards" style="grid-template-columns:repeat(4,1fr)">
+        <div class="card">
+          <div class="card-label"><span>↑</span> Ingresos</div>
+          <div class="card-value green" id="kpi-ingresos">$0</div>
+          <div class="card-sub" id="kpi-ingresos-n">0 transacciones</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><span>↓</span> Gastos</div>
+          <div class="card-value red" id="kpi-gastos">$0</div>
+          <div class="card-sub" id="kpi-gastos-n">0 transacciones</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><span>◈</span> Balance neto</div>
+          <div class="card-value blue" id="kpi-balance">$0</div>
+          <div class="card-sub" id="kpi-ahorro-txt">Ahorro: $0</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><span>%</span> Tasa de ahorro</div>
+          <div class="card-value" id="kpi-saving-rate" style="color:var(--primary)">0%</div>
+          <div class="card-sub" id="kpi-saving-rate-sub">del ingreso</div>
+        </div>
+      </div>
+      <!-- Ingreso por fuente -->
+      <div class="chart-box" style="margin-bottom:12px">
+        <div class="chart-box-title">Ingresos por fuente</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="chart-wrap" style="height:180px"><canvas id="pieIngresoChart"></canvas></div>
+          <div id="distIngresoList"><div style="color:var(--muted-foreground);font-size:13px">Sin datos</div></div>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Gastos por categoría</div>
+          <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Distribución</div>
+          <div id="distList"><div style="color:var(--muted-foreground);font-size:13px">Sin datos</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARGAR -->
+    <div class="section" id="tab-cargar">
+      <div class="page-header"><div class="page-title" id="formTitle">Nueva transacción</div></div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Tipo</label>
+            <div class="tipo-group">
+              <button class="tipo-btn active-ingreso" id="btn-ingreso" onclick="setTipo('ingreso')">↑ Ingreso</button>
+              <button class="tipo-btn" id="btn-gasto" onclick="setTipo('gasto')">↓ Gasto</button>
+              <button class="tipo-btn" id="btn-ahorro" onclick="setTipo('ahorro')">◈ Ahorro</button>
+            </div>
+          </div>
+          <div class="field"><label>Monto ($)</label><input type="number" id="f-monto" placeholder="0" min="0" step="1"></div>
+          <div class="field"><label>Fecha</label><input type="date" id="f-fecha"></div>
+          <div class="field full" id="cat-field" style="display:none">
+            <label>Categoría</label><select id="f-cat"></select>
+          </div>
+          <div class="field full" id="destino-field" style="display:none">
+            <label>Destino del ahorro</label><select id="f-destino"><option value="">— Sin asignar —</option></select>
+          </div>
+          <div class="field full"><label>Descripción (opcional)</label><textarea id="f-desc" placeholder="ej: Almuerzo con la novia..."></textarea></div>
+          <div class="field full">
+            <button class="btn-primary" style="width:100%;justify-content:center" onclick="guardarTx()">+ Guardar transacción</button>
+            <div class="toast ok" id="toast">✓ Guardado correctamente</div>
+          </div>
+        </div>
+        <input type="hidden" id="edit-id">
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="section" id="tab-historial">
+      <div class="page-header"><div class="page-title">Historial</div><div class="page-sub" id="hist-month-label">—</div></div>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input type="text" id="hist-search" placeholder="Buscar..." style="width:180px;font-size:13px" oninput="renderHistorial()">
+          <select id="hist-filter-tipo" style="font-size:13px;width:130px" onchange="renderHistorial()">
+            <option value="">Todos los tipos</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+            <option value="ahorro">Ahorro</option>
+          </select>
+        </div>
+        <button class="btn-secondary" onclick="exportHistorialExcel()">⬇ Excel</button>
+      </div>
+      <div id="hist-container"></div>
+    </div>
+
+    <!-- EVOLUCIÓN -->
+    <div class="section" id="tab-evolucion">
+      <div class="page-header"><div class="page-title">Evolución</div></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="display:flex;background:var(--secondary);border-radius:var(--radius);padding:3px;gap:3px">
+          <button class="tipo-btn active-evol" id="evol-btn-6m" onclick="setEvolRange('6m',this)">6 meses</button>
+          <button class="tipo-btn" id="evol-btn-trim" onclick="setEvolRange('trim',this)">Trimestral</button>
+          <button class="tipo-btn" id="evol-btn-sem" onclick="setEvolRange('sem',this)">Semestral</button>
+          <button class="tipo-btn" id="evol-btn-year" onclick="setEvolRange('year',this)">Anual</button>
+        </div>
+        <button class="btn-secondary" onclick="exportEvolucionPDF()">⬇ PDF</button>
+      </div>
+      <div class="chart-box">
+        <div class="chart-box-title" id="evol-chart-title">Ingresos vs Gastos — últimos 6 meses</div>
+        <div class="chart-wrap" style="height:300px"><canvas id="barChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- META -->
+    <div class="section" id="tab-meta">
+      <div class="page-header"><div class="page-title">Meta de ahorro</div></div>
+      <div class="card" style="max-width:500px;margin-bottom:16px">
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap">
+          <div class="field" style="flex:1"><label>Meta ($)</label><input type="number" id="meta-input" placeholder="0" min="0"></div>
+          <div class="field"><label>Período</label>
+            <select id="meta-period-mode" onchange="renderMeta()" style="font-size:13px">
+              <option value="month">Mensual</option>
+              <option value="quarter">Trimestral</option>
+              <option value="semester">Semestral</option>
+              <option value="year">Anual</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="guardarMeta()">Guardar</button>
+        </div>
+        <div id="meta-progress" style="display:none">
+          <div class="progress-info"><span id="meta-period-label">Ahorro del período</span><span><span class="val" id="meta-actual">$0</span> / <span class="val" id="meta-objetivo">$0</span></span></div>
+          <div class="progress-bar-bg"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+          <div class="progress-pct" id="progress-pct">0%</div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-box-title" id="sav-chart-title">Ahorro mensual — últimos 6 meses</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="savChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- DESTINOS -->
+    <div class="section" id="tab-destinos">
+      <div class="page-header"><div class="page-title">Destinos de ahorro</div></div>
+      <div class="toolbar"><button class="btn-primary" onclick="openDestinoModal()">+ Nuevo destino</button></div>
+      <div class="destinos-grid" id="destinosGrid"></div>
+      <div id="destinos-empty" class="empty" style="display:none">Creá tu primer destino de ahorro 🗺</div>
+    </div>
+
+    <!-- CATEGORÍAS -->
+    <div class="section" id="tab-categorias">
+      <div class="page-header"><div class="page-title">Categorías</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:700px;margin-bottom:16px">
+        <div class="chart-box">
+          <div class="chart-box-title" style="color:var(--red)">↓ Gasto</div>
+          <div class="cat-grid" id="catGrid-gasto"></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title" style="color:var(--green)">↑ Ingreso</div>
+          <div class="cat-grid" id="catGrid-ingreso"></div>
+        </div>
+      </div>
+      <div class="form-card" style="max-width:560px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px">Nueva categoría</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="field"><label>Nombre</label><input type="text" id="new-cat-name" placeholder="ej: Educación"></div>
+          <div class="field"><label>Naturaleza</label>
+            <select id="new-cat-nature">
+              <option value="gasto">↓ Gasto</option>
+              <option value="ingreso">↑ Ingreso</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Color</label>
+          <div class="color-options" id="newCatColors"></div>
+        </div>
+        <button class="btn-primary" style="width:100%;justify-content:center" onclick="addCat()">+ Agregar categoría</button>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted-foreground)">Las categorías con transacciones asignadas no se pueden eliminar.</div>
+      </div>
+    </div>
+
+    <!-- IMPORTAR -->
+    <div class="section" id="tab-importar">
+      <div class="page-header"><div class="page-title">Importar datos</div></div>
+      <div style="display:grid;gap:14px;max-width:680px">
+        <div class="form-card">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">Desde Google Sheets / Excel</div>
+          <div style="font-size:13px;color:var(--muted-foreground);margin-bottom:16px">Exportá tu Sheets como .xlsx o .csv, subilo y mapeá las columnas.</div>
+          <div class="import-drop" onclick="document.getElementById('importFile').click()">
+            <div class="import-drop-icon">📂</div>
+            <div class="import-drop-title">Hacé clic o arrastrá tu archivo</div>
+            <div class="import-drop-sub">.xlsx, .xls o .csv</div>
+            <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+          </div>
+          <div id="import-mapping-section" style="display:none;margin-top:16px">
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted-foreground);margin-bottom:10px">Mapeá las columnas</div>
+            <div id="importMapping"></div>
+            <div id="import-preview" style="margin-top:14px;overflow-x:auto"></div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn-primary" style="flex:1;justify-content:center" onclick="executeImport()">Importar</button>
+              <button class="btn-secondary" onclick="cancelImport()">Cancelar</button>
+            </div>
+            <div class="toast ok" id="import-toast" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <div class="form-card">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">Backup JSON</div>
+          <div style="font-size:13px;color:var(--muted-foreground);margin-bottom:14px">Exportá o restaurá todos tus datos.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-secondary" onclick="exportBackupJSON()">⬇ Descargar backup</button>
+            <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ Restaurar backup</button>
+            <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restoreBackupJSON(this)">
+          </div>
+          <div class="toast ok" id="restore-toast" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOOGLE SHEETS -->
+    <div class="section" id="tab-sheets">
+      <div class="page-header"><div class="page-title">Google Sheets</div><div class="page-sub">Sincronización en tiempo real con tu planilla</div></div>
+      <div style="max-width:560px;display:grid;gap:14px">
+        <div class="card" id="sheets-status-card">
+          <div class="card-label">Estado de conexión</div>
+          <div id="sheets-connected-view" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <span style="color:var(--green);font-size:18px">●</span>
+              <span style="font-weight:600;font-size:14px">Conectado</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted-foreground);margin-top:4px" id="sheets-url-display"></div>
+            <div style="font-size:12px;color:var(--muted-foreground);margin-top:2px">Última sync: <span id="sheets-last-sync">—</span></div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn-primary" onclick="syncFromSheet()" style="font-size:12px">⟳ Sincronizar ahora</button>
+              <button class="btn-secondary" onclick="disconnectSheet()" style="font-size:12px">Desconectar</button>
+            </div>
+          </div>
+          <div id="sheets-disconnected-view">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <span style="color:var(--muted-foreground);font-size:18px">○</span>
+              <span style="font-weight:600;font-size:14px;color:var(--muted-foreground)">No conectado</span>
+            </div>
+            <div style="margin-top:14px">
+              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted-foreground)">URL del Apps Script</label>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <input type="url" id="apiUrlInput2" placeholder="https://script.google.com/macros/s/..." style="flex:1;font-size:13px">
+                <button class="btn-primary" onclick="saveApiUrl2()">Conectar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">Cómo conectar tu Sheet</div>
+          <div style="font-size:13px;color:var(--muted-foreground);margin-bottom:18px;line-height:1.6">Seguí estos pasos una sola vez. No necesitás saber programar.</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;gap:12px">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+              <div style="font-size:13px;line-height:1.5">Abrí tu Google Sheet → <strong>Extensiones → Apps Script</strong></div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+              <div style="font-size:13px;line-height:1.5">Borrá todo y pegá el código del archivo <code style="font-family:var(--font-mono);font-size:12px;background:var(--secondary);padding:1px 6px;border-radius:4px;color:var(--primary)">apps_script.js</code> que viene junto al dashboard. Cambiá <code style="font-family:var(--font-mono);font-size:12px;background:var(--secondary);padding:1px 6px;border-radius:4px;color:var(--primary)">SHEET_NAMES</code> por los nombres de tus pestañas.</div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+              <div style="font-size:13px;line-height:1.5"><strong>Implementar → Nueva implementación</strong><br>· Tipo: <em>Aplicación web</em><br>· Ejecutar como: <em>Yo</em><br>· Quién tiene acceso: <em>Cualquier persona</em></div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+              <div style="font-size:13px;line-height:1.5">Copiá la URL que aparece → pegala arriba y hacé clic en <strong>Conectar</strong>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- CONFIGURACIÓN -->
+    <div class="section" id="tab-config">
+      <div class="page-header"><div class="page-title">Configuración</div></div>
+      <div style="max-width:500px;display:grid;gap:14px">
+
+        <div class="form-card">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Metas personales</div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Meta de tasa de ahorro (%)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="number" id="config-saving-target" min="1" max="100" placeholder="20" style="width:100px">
+              <span style="font-size:13px;color:var(--muted-foreground)">% del ingreso</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted-foreground);margin-top:6px" id="config-saving-preview">
+              El indicador se pone verde cuando alcanzás este umbral.
+            </div>
+          </div>
+          <button class="btn-primary" style="width:100%;justify-content:center" onclick="saveConfig()">Guardar configuración</button>
+          <div class="toast ok" id="config-toast" style="margin-top:10px"></div>
+        </div>
+
+        <div class="form-card">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">Categorías de ingreso</div>
+          <div style="font-size:13px;color:var(--muted-foreground);margin-bottom:14px">
+            Estas categorías vienen de tu Google Sheet y se mapean automáticamente.
+          </div>
+          <div class="cat-grid" id="catGrid-ingreso-config"></div>
+          <div style="font-size:12px;color:var(--muted-foreground);margin-top:10px">
+            Para agregar nuevas fuentes de ingreso, actualizá las opciones en tu Google Forms y luego actualizá el <code style="font-family:var(--font-mono);font-size:11px;background:var(--secondary);padding:1px 5px;border-radius:3px">apps_script.js</code>.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ANÁLISIS INTELIGENTE -->
+    <div class="section" id="tab-analisis">
+      <div class="page-header"><div class="page-title">Análisis inteligente</div><div class="page-sub" id="analisis-period-label">—</div></div>
+      <div style="display:grid;gap:14px">
+
+        <!-- Alertas -->
+        <div class="chart-box" id="alertas-box">
+          <div class="chart-box-title">⚠️ Alertas del período</div>
+          <div id="alertas-list"><div style="color:var(--muted-foreground);font-size:13px">Cargando...</div></div>
+        </div>
+
+        <!-- Proyección -->
+        <div class="chart-box">
+          <div class="chart-box-title">📈 Proyección fin de mes</div>
+          <div id="proyeccion-content" style="font-size:13px;color:var(--muted-foreground)">Seleccioná un período mensual para ver la proyección.</div>
+        </div>
+
+        <!-- Comparativa mes a mes por categoría -->
+        <div class="chart-box">
+          <div class="chart-box-title">Comparativa por categoría vs mes anterior</div>
+          <div id="comparativa-cats"></div>
+        </div>
+
+        <!-- Ingreso ajustado por inflación -->
+        <div class="chart-box">
+          <div class="chart-box-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Ingreso real ajustado por inflación (IPC INDEC)</span>
+            <span id="inflacion-status" style="font-size:11px;color:var(--muted-foreground)">Cargando...</span>
+          </div>
+          <div class="chart-wrap" style="height:260px"><canvas id="inflacionChart"></canvas></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VISUAL -->
+    <div class="section" id="tab-visual">
+      <div class="page-header"><div class="page-title">Visual</div></div>
+      <div style="display:grid;gap:14px">
+
+        <!-- Balance acumulado -->
+        <div class="chart-box">
+          <div class="chart-box-title">Balance acumulado</div>
+          <div class="chart-wrap" style="height:260px"><canvas id="balanceChart"></canvas></div>
+        </div>
+
+        <!-- Heatmap gastos por día -->
+        <div class="chart-box">
+          <div class="chart-box-title">Gastos por día del mes</div>
+          <div id="heatmap-container" style="overflow-x:auto"></div>
+        </div>
+
+        <!-- Ingresos vs Gastos vs Ahorro área -->
+        <div class="chart-box">
+          <div class="chart-box-title">Flujo mensual — Ingresos / Gastos / Ahorro</div>
+          <div class="chart-wrap" style="height:260px"><canvas id="flujoChart"></canvas></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: EDITAR TX -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Editar transacción <button class="modal-close" onclick="closeModal('editModal')">×</button></div>
+    <div class="form-grid">
+      <div class="field full"><label>Tipo</label>
+        <div class="tipo-group">
+          <button class="tipo-btn" id="m-btn-ingreso" onclick="setModalTipo('ingreso')">↑ Ingreso</button>
+          <button class="tipo-btn" id="m-btn-gasto" onclick="setModalTipo('gasto')">↓ Gasto</button>
+          <button class="tipo-btn" id="m-btn-ahorro" onclick="setModalTipo('ahorro')">◈ Ahorro</button>
+        </div>
+      </div>
+      <div class="field"><label>Monto ($)</label><input type="number" id="m-monto" min="0"></div>
+      <div class="field"><label>Fecha</label><input type="date" id="m-fecha"></div>
+      <div class="field full" id="m-cat-field"><label>Categoría</label><select id="m-cat"></select></div>
+      <div class="field full" id="m-destino-field" style="display:none"><label>Destino</label><select id="m-destino"><option value="">— Sin asignar —</option></select></div>
+      <div class="field full"><label>Descripción</label><textarea id="m-desc"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveEditTx()">Guardar cambios</button>
+    </div>
+    <input type="hidden" id="m-edit-id">
+  </div>
+</div>
+
+<!-- MODAL: DESTINO -->
+<div class="modal-overlay" id="destinoModal">
+  <div class="modal">
+    <div class="modal-title" id="destinoModalTitle">Nuevo destino <button class="modal-close" onclick="closeModal('destinoModal')">×</button></div>
+    <div class="modal-inner">
+      <div class="field"><label>Nombre</label><input type="text" id="d-nombre" placeholder="ej: Viaje a Europa"></div>
+      <div class="field"><label>Descripción (opcional)</label><input type="text" id="d-desc" placeholder="ej: Fondo 2026"></div>
+      <div class="field"><label>Meta de ahorro ($)</label><input type="number" id="d-meta" placeholder="0" min="0"></div>
+      <div class="field">
+        <label>Imagen</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="document.getElementById('d-img-file').click()">📎 Subir</button>
+          <span style="font-size:12px;color:var(--muted-foreground)">o URL:</span>
+          <input type="text" id="d-img-url" placeholder="https://..." style="flex:1;font-size:13px" oninput="previewDestinoImg()">
+          <input type="file" id="d-img-file" accept="image/*" style="display:none" onchange="handleDestinoImgFile(this)">
+        </div>
+        <div id="d-img-preview" style="display:none;margin-top:8px">
+          <img id="d-img-preview-img" style="width:100%;height:110px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border)" src="" alt="">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('destinoModal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveDestino()">Guardar</button>
+    </div>
+    <input type="hidden" id="d-edit-id">
+  </div>
+</div>
+
+<!-- MODAL: EDITAR CAT -->
+<div class="modal-overlay" id="editCatModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">Editar categoría <button class="modal-close" onclick="closeModal('editCatModal')">×</button></div>
+    <div class="modal-inner">
+      <div class="field"><label>Nombre</label><input type="text" id="ec-name"></div>
+      <div class="field"><label>Naturaleza</label>
+        <select id="ec-nature">
+          <option value="gasto">↓ Gasto</option>
+          <option value="ingreso">↑ Ingreso</option>
+        </select>
+      </div>
+      <div class="field"><label>Color</label><div class="color-options" id="ecColors"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('editCatModal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveEditCat()">Guardar</button>
+    </div>
+    <input type="hidden" id="ec-id">
+  </div>
+</div>
+
+<script>
+
+// ═══════════════════════════════════════════════
+// DATOS IMPORTADOS DESDE PLANILLA (auto-carga)
+// 403 transacciones · mayo 2025 → abril 2026
+// ═══════════════════════════════════════════════
+const PLANILLA_TX = [{"id":"1775737349396mmrd","tipo":"gasto","monto":27500.0,"date":"2025-07-28","cat":"cat7","destinoId":"","desc":"pago camistas fuchibol [Transferencia/QR]"},{"id":"1775737349396znvz","tipo":"gasto","monto":22500.0,"date":"2025-07-07","cat":"cat7","destinoId":"","desc":"inscripción futbol [Transferencia/QR]"},{"id":"1775737349396qghe","tipo":"gasto","monto":131300.0,"date":"2025-07-28","cat":"cat14","destinoId":"","desc":"multa caminera [Transferencia/QR]"},{"id":"1775737349396ijpn","tipo":"gasto","monto":14700.0,"date":"2025-07-05","cat":"cat8","destinoId":"","desc":"bar cami [Efectivo]"},{"id":"1775737349396vkaq","tipo":"gasto","monto":4000.0,"date":"2025-07-05","cat":"cat14","destinoId":"","desc":"estcionamiento bar cami [Efectivo]"},{"id":"1775737349396hxns","tipo":"gasto","monto":8000.0,"date":"2025-07-05","cat":"cat2","destinoId":"","desc":"bar cami [Efectivo]"},{"id":"1775737349396scsw","tipo":"gasto","monto":10000.0,"date":"2025-07-05","cat":"cat2","destinoId":"","desc":"trago bar cami [Efectivo]"},{"id":"1775737349396qsep","tipo":"gasto","monto":4800.0,"date":"2025-07-05","cat":"cat14","destinoId":"","desc":"pastillas cami [Efectivo]"},{"id":"1775737349396jqzl","tipo":"gasto","monto":9000.0,"date":"2025-07-05","cat":"cat1","destinoId":"","desc":"empanadas pelli [Efectivo]"},{"id":"1775737349396bcfo","tipo":"gasto","monto":14200.0,"date":"2025-07-05","cat":"cat1","destinoId":"","desc":"asado pelli [Transferencia/QR]"},{"id":"1775737349396jqwi","tipo":"gasto","monto":2000.0,"date":"2025-07-05","cat":"cat14","destinoId":"","desc":"peaje [Efectivo]"},{"id":"1775737349396mkms","tipo":"gasto","monto":5500.0,"date":"2025-07-06","cat":"cat7","destinoId":"","desc":"futbol pibes [Efectivo]"},{"id":"1775737349396ftiq","tipo":"gasto","monto":33000.0,"date":"2025-07-07","cat":"cat10","destinoId":"","desc":"nafta + propina bar [Efectivo]"},{"id":"1775737349396mspd","tipo":"gasto","monto":7000.0,"date":"2025-07-06","cat":"cat14","destinoId":"","desc":"apuesta en lo de benja [Transferencia/QR]"},{"id":"1775737349396myms","tipo":"ingreso","monto":40000.0,"date":"2025-07-06","cat":"ingreso","destinoId":"","desc":"finde estacion [Transferencia/QR]"},{"id":"1775737349396nuoy","tipo":"ingreso","monto":300000.0,"date":"2025-05-03","cat":"ingreso","destinoId":"","desc":"mensual ruben [Efectivo]"},{"id":"1775737349396yags","tipo":"ingreso","monto":652000.0,"date":"2025-07-03","cat":"ingreso","destinoId":"","desc":"SUELDO + SAC CORDEIRO [Transferencia/QR]"},{"id":"1775737349396lrie","tipo":"gasto","monto":1200.0,"date":"2025-07-06","cat":"cat1","destinoId":"","desc":"criollos en lo de pelli [Transferencia/QR]"},{"id":"1775737349396ndsm","tipo":"gasto","monto":2800.0,"date":"2025-07-07","cat":"cat14","destinoId":"","desc":"forros cami [Efectivo]"},{"id":"1775737349396tlqk","tipo":"gasto","monto":14000.0,"date":"2025-07-07","cat":"cat13","destinoId":"","desc":"tabaco+forros+chicles [Efectivo]"},{"id":"1775737349396mpmb","tipo":"gasto","monto":20000.0,"date":"2025-07-08","cat":"cat14","destinoId":"","desc":"preservarivos x12 unidades [Tarjeta]"},{"id":"1775737349396cbfn","tipo":"gasto","monto":19200.0,"date":"2025-09-08","cat":"cat14","destinoId":"","desc":"cine con el ciri [Transferencia/QR]"},{"id":"1775737349396sadb","tipo":"gasto","monto":7500.0,"date":"2025-07-09","cat":"cat8","destinoId":"","desc":"vino [Efectivo]"},{"id":"1775737349396jqlc","tipo":"gasto","monto":2800.0,"date":"2025-07-08","cat":"cat14","destinoId":"","desc":"forros [Efectivo]"},{"id":"1775737349396zfgz","tipo":"gasto","monto":8800.0,"date":"2025-07-10","cat":"cat1","destinoId":"","desc":"pizzas y franui [Efectivo]"},{"id":"1775737349396dtpd","tipo":"gasto","monto":7500.0,"date":"2025-07-10","cat":"cat2","destinoId":"","desc":"burguer cami [Transferencia/QR]"},{"id":"1775737349396twcj","tipo":"gasto","monto":194000.0,"date":"2025-07-20","cat":"cat14","destinoId":"","desc":"PAGO SEÑA BRASIL [Transferencia/QR]"},{"id":"1775737349396sdqv","tipo":"gasto","monto":19550.0,"date":"2025-07-10","cat":"cat1","destinoId":"","desc":"asado merla [Transferencia/QR]"},{"id":"1775737349396owtq","tipo":"gasto","monto":5500.0,"date":"2025-07-11","cat":"cat1","destinoId":"","desc":"chipa agus [Efectivo]"},{"id":"1775737349396kind","tipo":"gasto","monto":30000.0,"date":"2025-07-12","cat":"cat10","destinoId":"","desc":"nafta super [Efectivo]"},{"id":"1775737349396ftyi","tipo":"gasto","monto":4800.0,"date":"2025-07-12","cat":"cat1","destinoId":"","desc":"facturas casa cami [Efectivo]"},{"id":"1775737349396liff","tipo":"gasto","monto":7000.0,"date":"2025-07-12","cat":"cat13","destinoId":"","desc":"tabaco cami [Efectivo]"},{"id":"1775737349396pxqh","tipo":"gasto","monto":4000.0,"date":"2025-07-13","cat":"cat14","destinoId":"","desc":"playa chili [Efectivo]"},{"id":"1775737349396cpsd","tipo":"gasto","monto":3100.0,"date":"2025-07-13","cat":"cat1","destinoId":"","desc":"sanguche de miga [Transferencia/QR]"},{"id":"1775737349396hzdi","tipo":"gasto","monto":6500.0,"date":"2025-07-13","cat":"cat7","destinoId":"","desc":"canchas lomas [Efectivo]"},{"id":"1775737349396rnpl","tipo":"gasto","monto":20000.0,"date":"2025-07-12","cat":"cat9","destinoId":"","desc":"entrada caty fernandez [Efectivo]"},{"id":"1775737349396likz","tipo":"gasto","monto":13500.0,"date":"2025-07-13","cat":"cat1","destinoId":"","desc":"gula ver casa franco [Transferencia/QR]"},{"id":"1775737349396ekax","tipo":"ingreso","monto":15000.0,"date":"2025-07-19","cat":"ingreso","destinoId":"","desc":"pago estación [Transferencia/QR]"},{"id":"1775737349396aoxs","tipo":"gasto","monto":3000.0,"date":"2025-07-14","cat":"cat14","destinoId":"","desc":"propina moza carpintería [Efectivo]"},{"id":"1775737349396fdtr","tipo":"gasto","monto":2000.0,"date":"2025-07-15","cat":"cat14","destinoId":"","desc":"estacionamiento nueva [Efectivo]"},{"id":"1775737349396kydv","tipo":"gasto","monto":5500.0,"date":"2025-07-17","cat":"cat1","destinoId":"","desc":"café y media lunas full [Efectivo]"},{"id":"1775737349396kjwk","tipo":"gasto","monto":10000.0,"date":"2025-07-16","cat":"cat1","destinoId":"","desc":"pastas al rico franco [Transferencia/QR]"},{"id":"1775737349396nsqo","tipo":"gasto","monto":20000.0,"date":"2025-07-19","cat":"cat10","destinoId":"","desc":"nafta super [Efectivo]"},{"id":"1775737349396yopl","tipo":"gasto","monto":12000.0,"date":"2025-07-20","cat":"cat14","destinoId":"","desc":"lomito casa cami [Efectivo]"},{"id":"1775737349396ozhl","tipo":"gasto","monto":2300.0,"date":"2025-07-22","cat":"cat11","destinoId":"","desc":"impresiones [Efectivo]"},{"id":"1775737349396gumh","tipo":"gasto","monto":2300.0,"date":"2025-07-22","cat":"cat2","destinoId":"","desc":"café facu [Transferencia/QR]"},{"id":"1775737349396besn","tipo":"gasto","monto":2470.0,"date":"2025-07-25","cat":"cat11","destinoId":"","desc":"librería tinta amarilla [Transferencia/QR]"},{"id":"1775737349396rnoe","tipo":"gasto","monto":9250.0,"date":"2025-07-22","cat":"cat1","destinoId":"","desc":"tostado ypf [Transferencia/QR]"},{"id":"1775737349396engm","tipo":"ingreso","monto":10250.0,"date":"2025-07-25","cat":"ingreso","destinoId":"","desc":"transferencia panda hamburguesa pagada con tarjeta [Transferencia/QR]"},{"id":"1775737349396rsok","tipo":"ingreso","monto":200000.0,"date":"2025-07-24","cat":"ingreso","destinoId":"","desc":"indemnización cordeiro [Transferencia/QR]"},{"id":"1775737349396ewhc","tipo":"gasto","monto":10000.0,"date":"2025-07-23","cat":"cat1","destinoId":"","desc":"pastas cami [Efectivo]"},{"id":"1775737349397pgeb","tipo":"gasto","monto":17500.0,"date":"2025-07-24","cat":"cat1","destinoId":"","desc":"comida luuma [Transferencia/QR]"},{"id":"1775737349397ysyk","tipo":"gasto","monto":10000.0,"date":"2025-07-17","cat":"cat1","destinoId":"","desc":"lomito pachu [Transferencia/QR]"},{"id":"1775737349397hlsu","tipo":"gasto","monto":5700.0,"date":"2025-07-24","cat":"cat8","destinoId":"","desc":"vino [Efectivo]"},{"id":"1775737349397zlyc","tipo":"gasto","monto":55000.0,"date":"2025-07-25","cat":"cat1","destinoId":"","desc":"comida la cumbre [Transferencia/QR]"},{"id":"1775737349397hqjf","tipo":"gasto","monto":9000.0,"date":"2025-07-24","cat":"cat7","destinoId":"","desc":"paddle terrazas [Transferencia/QR]"},{"id":"1775737349397pgip","tipo":"gasto","monto":5380.0,"date":"2025-07-24","cat":"cat1","destinoId":"","desc":"choris pibes de la facu [Transferencia/QR]"},{"id":"1775737349397avuj","tipo":"gasto","monto":17500.0,"date":"2025-07-25","cat":"cat1","destinoId":"","desc":"vino y helado cami [Transferencia/QR]"},{"id":"1775737349397zapk","tipo":"gasto","monto":4000.0,"date":"2025-07-27","cat":"cat1","destinoId":"","desc":"medialunas y café cumbre [Efectivo]"},{"id":"1775737349397dfmz","tipo":"gasto","monto":2900.0,"date":"2025-07-27","cat":"cat8","destinoId":"","desc":"tony [Transferencia/QR]"},{"id":"1775737349397imrk","tipo":"gasto","monto":10000.0,"date":"2025-07-29","cat":"cat14","destinoId":"","desc":"harina huevo espuma loca [Transferencia/QR]"},{"id":"1775737349397nmaf","tipo":"ingreso","monto":9000.0,"date":"2025-07-30","cat":"ingreso","destinoId":"","desc":"transferencia cami por lo las tostadas [Transferencia/QR]"},{"id":"1775737349397zxht","tipo":"gasto","monto":15900.0,"date":"2025-07-30","cat":"cat1","destinoId":"","desc":"comida casa cami [Efectivo]"},{"id":"1775737349397srfn","tipo":"gasto","monto":9000.0,"date":"2025-07-31","cat":"cat8","destinoId":"","desc":"boliche recibida ciri [Transferencia/QR]"},{"id":"1775737349397gqxu","tipo":"gasto","monto":30000.0,"date":"2025-07-31","cat":"cat2","destinoId":"","desc":"cena con cami [Efectivo]"},{"id":"1775737349397aeeg","tipo":"gasto","monto":8000.0,"date":"2025-07-30","cat":"cat9","destinoId":"","desc":"maria maria [Efectivo]"},{"id":"1775737349397cami","tipo":"gasto","monto":2980.0,"date":"2025-07-30","cat":"cat1","destinoId":"","desc":"gatorade [Transferencia/QR]"},{"id":"1775737349397wajf","tipo":"gasto","monto":1500.0,"date":"2025-08-28","cat":"cat1","destinoId":"","desc":"chicles [Efectivo]"},{"id":"1775737349397bezf","tipo":"gasto","monto":15000.0,"date":"2025-08-29","cat":"cat12","destinoId":"","desc":"piedra chubut cami [Transferencia/QR]"},{"id":"1775737349397dtgk","tipo":"gasto","monto":27000.0,"date":"2025-08-29","cat":"cat14","destinoId":"","desc":"entradas cosquin rock [Transferencia/QR]"},{"id":"1775737349397vzti","tipo":"gasto","monto":33200.0,"date":"2025-08-29","cat":"cat10","destinoId":"","desc":"nafta ypfd [Transferencia/QR]"},{"id":"1775737349397jbcs","tipo":"gasto","monto":7700.0,"date":"2025-08-29","cat":"cat7","destinoId":"","desc":"futbol sintetico torneo [Transferencia/QR]"},{"id":"1775737349397ejpq","tipo":"gasto","monto":11000.0,"date":"2025-08-30","cat":"cat1","destinoId":"","desc":"milanesa pachu [Transferencia/QR]"},{"id":"1775737349397jvtm","tipo":"gasto","monto":75000.0,"date":"2025-08-04","cat":"cat14","destinoId":"","desc":"entrada cosquin primera cuota [Transferencia/QR]"},{"id":"1775737349397kyhf","tipo":"gasto","monto":5000.0,"date":"2025-08-02","cat":"cat7","destinoId":"","desc":"futbol cintetico [Transferencia/QR]"},{"id":"1775737349397vqfu","tipo":"gasto","monto":30000.0,"date":"2025-08-02","cat":"cat10","destinoId":"","desc":"nafta yof [Efectivo]"},{"id":"1775737349397wlzu","tipo":"ingreso","monto":400000.0,"date":"2025-08-03","cat":"ingreso","destinoId":"","desc":"sueldo mercado pago [Transferencia/QR]"},{"id":"1775737349397qoth","tipo":"gasto","monto":2000.0,"date":"2025-08-03","cat":"cat14","destinoId":"","desc":"pago ropa berry [Efectivo]"},{"id":"1775737349397blmg","tipo":"gasto","monto":2000.0,"date":"2025-07-28","cat":"cat14","destinoId":"","desc":"pago ropa berry [Efectivo]"},{"id":"1775737349397aiau","tipo":"gasto","monto":5800.0,"date":"2025-07-07","cat":"cat1","destinoId":"","desc":"carlitos [Efectivo]"},{"id":"1775737349397xfcm","tipo":"gasto","monto":4000.0,"date":"2025-08-02","cat":"cat14","destinoId":"","desc":"peaje facu [Efectivo]"},{"id":"1775737349397zgpq","tipo":"gasto","monto":20500.0,"date":"2025-08-08","cat":"cat1","destinoId":"","desc":"helado camila [Efectivo]"},{"id":"1775737349397oiej","tipo":"ingreso","monto":300000.0,"date":"2025-08-01","cat":"ingreso","destinoId":"","desc":"ingreso rubén [Efectivo]"},{"id":"1775737349397pczv","tipo":"gasto","monto":2700.0,"date":"2025-08-06","cat":"cat1","destinoId":"","desc":"powerade de gym [Transferencia/QR]"},{"id":"1775737349397bvfg","tipo":"gasto","monto":12125.0,"date":"2025-08-09","cat":"cat9","destinoId":"","desc":"entrada sunset cumple nachito [Transferencia/QR]"},{"id":"1775737349397xxhv","tipo":"ingreso","monto":30000.0,"date":"2025-08-09","cat":"ingreso","destinoId":"","desc":"estación finde efectivo [Efectivo]"},{"id":"1775737349397rast","tipo":"gasto","monto":4500.0,"date":"2025-08-08","cat":"cat14","destinoId":"","desc":"chisitos alvaro [Transferencia/QR]"},{"id":"1775737349397dbbn","tipo":"gasto","monto":11000.0,"date":"2025-08-09","cat":"cat8","destinoId":"","desc":"birra picnic [Efectivo]"},{"id":"1775737349397gmvq","tipo":"gasto","monto":30000.0,"date":"2025-08-09","cat":"cat1","destinoId":"","desc":"merienda papi y ma [Efectivo]"},{"id":"1775737349397ulbp","tipo":"gasto","monto":8480.0,"date":"2025-08-09","cat":"cat1","destinoId":"","desc":"ñoquis eze [Transferencia/QR]"},{"id":"1775737349397irut","tipo":"gasto","monto":6500.0,"date":"2025-08-07","cat":"cat7","destinoId":"","desc":"fulbito domingo [Efectivo]"},{"id":"1775737349397pqbo","tipo":"gasto","monto":4240.0,"date":"2025-08-08","cat":"cat1","destinoId":"","desc":"ñoquis eze [Transferencia/QR]"},{"id":"1775737349397uqkk","tipo":"gasto","monto":10000.0,"date":"2025-08-09","cat":"cat8","destinoId":"","desc":"hielo cumple nachito [Efectivo]"},{"id":"1775737349397vmjz","tipo":"ingreso","monto":10000.0,"date":"2025-08-11","cat":"ingreso","destinoId":"","desc":"devolución hielo de nachito [Transferencia/QR]"},{"id":"1775737349397nyex","tipo":"gasto","monto":23000.0,"date":"2025-08-10","cat":"cat1","destinoId":"","desc":"mac cine cami [Transferencia/QR]"},{"id":"1775737349397aodl","tipo":"gasto","monto":5700.0,"date":"2025-08-08","cat":"cat1","destinoId":"","desc":"todstaeo hoy [Efectivo]"},{"id":"1775737349397tkvo","tipo":"gasto","monto":4000.0,"date":"2025-08-10","cat":"cat8","destinoId":"","desc":"jugo facultad [Efectivo]"},{"id":"1775737349397ypjk","tipo":"gasto","monto":7850.0,"date":"2025-08-12","cat":"cat7","destinoId":"","desc":"amistoso la gran 7 [Efectivo]"},{"id":"1775737349397jiyj","tipo":"gasto","monto":8500.0,"date":"2025-08-12","cat":"cat7","destinoId":"","desc":"cancha g7 [Transferencia/QR]"},{"id":"1775737349397oier","tipo":"gasto","monto":3000.0,"date":"2025-08-13","cat":"cat1","destinoId":"","desc":"mafalda ucc [Transferencia/QR]"},{"id":"1775737349397jucz","tipo":"gasto","monto":25000.0,"date":"2025-08-12","cat":"cat10","destinoId":"","desc":"nafta shell [Efectivo]"},{"id":"1775737349397kfcz","tipo":"gasto","monto":15000.0,"date":"2025-08-14","cat":"cat8","destinoId":"","desc":"alcohol turco [Transferencia/QR]"},{"id":"1775737349397mnzc","tipo":"gasto","monto":28000.0,"date":"2025-08-15","cat":"cat9","destinoId":"","desc":"boliche y vasos [Efectivo]"},{"id":"1775737349397edfx","tipo":"gasto","monto":1850.0,"date":"2025-08-15","cat":"cat1","destinoId":"","desc":"jugo de narabja [Transferencia/QR]"},{"id":"1775737349397fxzc","tipo":"gasto","monto":4200.0,"date":"2025-08-17","cat":"cat12","destinoId":"","desc":"regalo remera flecha [Transferencia/QR]"},{"id":"1775737349397tahm","tipo":"gasto","monto":30000.0,"date":"2025-08-17","cat":"cat10","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349397ovnq","tipo":"ingreso","monto":30000.0,"date":"2025-08-17","cat":"ingreso","destinoId":"","desc":"pago del finde rubens [Transferencia/QR]"},{"id":"1775737349397eqxf","tipo":"gasto","monto":10000.0,"date":"2025-08-17","cat":"cat8","destinoId":"","desc":"alcochol cumple tita [Transferencia/QR]"},{"id":"1775737349397kphl","tipo":"gasto","monto":6200.0,"date":"2025-08-17","cat":"cat1","destinoId":"","desc":"helado cremolatti [Transferencia/QR]"},{"id":"1775737349397yxhn","tipo":"gasto","monto":17500.0,"date":"2025-08-18","cat":"cat1","destinoId":"","desc":"helado flia cami [Efectivo]"},{"id":"1775737349397bwbm","tipo":"gasto","monto":9000.0,"date":"2025-08-19","cat":"cat1","destinoId":"","desc":"café + tostado full [Efectivo]"},{"id":"1775737349397btgi","tipo":"gasto","monto":8500.0,"date":"2025-08-20","cat":"cat7","destinoId":"","desc":"futbol torneo [Efectivo]"},{"id":"1775737349397pxjg","tipo":"gasto","monto":8500.0,"date":"2025-08-20","cat":"cat1","destinoId":"","desc":"tostado ucc [Efectivo]"},{"id":"1775737349397ezfs","tipo":"gasto","monto":30000.0,"date":"2025-08-20","cat":"cat10","destinoId":"","desc":"nafta shell [Transferencia/QR]"},{"id":"1775737349397cmfq","tipo":"gasto","monto":14900.0,"date":"2025-08-21","cat":"cat2","destinoId":"","desc":"mistica [Transferencia/QR]"},{"id":"1775737349397qyeu","tipo":"gasto","monto":21000.0,"date":"2025-08-21","cat":"cat2","destinoId":"","desc":"gurupa [Transferencia/QR]"},{"id":"1775737349397ibgv","tipo":"gasto","monto":32900.0,"date":"2025-08-23","cat":"cat2","destinoId":"","desc":"wort cami [Efectivo]"},{"id":"1775737349397rslk","tipo":"gasto","monto":6000.0,"date":"2025-08-24","cat":"cat8","destinoId":"","desc":"cerveza [Efectivo]"},{"id":"1775737349397vzlf","tipo":"gasto","monto":3900.0,"date":"2025-08-26","cat":"cat2","destinoId":"","desc":"café garita [Efectivo]"},{"id":"1775737349397ayna","tipo":"gasto","monto":26685.0,"date":"2025-08-26","cat":"cat1","destinoId":"","desc":"pago h so y comida [Transferencia/QR]"},{"id":"1775737349397fziv","tipo":"gasto","monto":20000.0,"date":"2025-08-20","cat":"cat10","destinoId":"","desc":"nafta shell [Efectivo]"},{"id":"1775737349397nbbm","tipo":"gasto","monto":10000.0,"date":"2025-08-26","cat":"cat8","destinoId":"","desc":"alcohol no pagado delfi [Transferencia/QR]"},{"id":"1775737349397rarj","tipo":"gasto","monto":20000.0,"date":"2025-08-26","cat":"cat10","destinoId":"","desc":"nafta ypf super [Efectivo]"},{"id":"1775737349397tiak","tipo":"gasto","monto":22400.0,"date":"2025-08-27","cat":"cat7","destinoId":"","desc":"futbol + panchos+ birra [Transferencia/QR]"},{"id":"1775737349397wqch","tipo":"gasto","monto":6500.0,"date":"2025-08-26","cat":"cat7","destinoId":"","desc":"futbol elenia [Transferencia/QR]"},{"id":"1775737349397anqv","tipo":"gasto","monto":50000.0,"date":"2025-09-02","cat":"cat14","destinoId":"","desc":"compensación de gastos septiembre [Efectivo]"},{"id":"1775737349397psmw","tipo":"ingreso","monto":700000.0,"date":"2025-09-30","cat":"ingreso","destinoId":"","desc":"si ingreso septiembre [Efectivo]"},{"id":"1775737349397kcke","tipo":"gasto","monto":451670.0,"date":"2025-09-30","cat":"cat14","destinoId":"","desc":"compensación de gastos septiembre [Efectivo]"},{"id":"1775737349397isor","tipo":"gasto","monto":30000.0,"date":"2025-09-10","cat":"cat1","destinoId":"","desc":"café cami [Transferencia/QR]"},{"id":"1775737349397hopj","tipo":"gasto","monto":30000.0,"date":"2025-09-09","cat":"cat10","destinoId":"","desc":"nafta axion [Transferencia/QR]"},{"id":"1775737349397vlyy","tipo":"gasto","monto":14000.0,"date":"2025-09-11","cat":"cat1","destinoId":"","desc":"lolitos lo de tito [Transferencia/QR]"},{"id":"1775737349397anqi","tipo":"gasto","monto":4200.0,"date":"2025-09-10","cat":"cat1","destinoId":"","desc":"facturas vicky [Transferencia/QR]"},{"id":"1775737349397quvw","tipo":"gasto","monto":16200.0,"date":"2025-09-10","cat":"cat14","destinoId":"","desc":"seña otro día más brasil [Transferencia/QR]"},{"id":"1775737349397spip","tipo":"gasto","monto":4180.0,"date":"2025-09-11","cat":"cat1","destinoId":"","desc":"gaseosa yof [Transferencia/QR]"},{"id":"1775737349397rhwd","tipo":"gasto","monto":16500.0,"date":"2025-09-11","cat":"cat1","destinoId":"","desc":"mística con brunl [Transferencia/QR]"},{"id":"1775737349397aptq","tipo":"gasto","monto":11000.0,"date":"2025-09-08","cat":"cat1","destinoId":"","desc":"frinch con niño y flecha [Transferencia/QR]"},{"id":"1775737349397wrnp","tipo":"gasto","monto":18500.0,"date":"2025-09-11","cat":"cat2","destinoId":"","desc":"chillo surubi [Efectivo]"},{"id":"1775737349397zivo","tipo":"gasto","monto":20000.0,"date":"2025-09-12","cat":"cat10","destinoId":"","desc":"nafta el cuadrado [Efectivo]"},{"id":"1775737349397kllh","tipo":"gasto","monto":10500.0,"date":"2025-09-12","cat":"cat14","destinoId":"","desc":" [Efectivo]"},{"id":"1775737349397dwhk","tipo":"gasto","monto":20000.0,"date":"2025-09-14","cat":"cat1","destinoId":"","desc":"kfc bs as [Efectivo]"},{"id":"1775737349397dozo","tipo":"gasto","monto":3250.0,"date":"2025-09-17","cat":"cat1","destinoId":"","desc":"powerade [Efectivo]"},{"id":"1775737349397ofru","tipo":"ingreso","monto":1300000.0,"date":"2025-10-02","cat":"ingreso","destinoId":"","desc":"ingreso octubre [Transferencia/QR]"},{"id":"1775737349397aggu","tipo":"gasto","monto":15714.0,"date":"2025-10-02","cat":"cat12","destinoId":"","desc":"regalo cere [Transferencia/QR]"},{"id":"1775737349397bhtk","tipo":"gasto","monto":120000.0,"date":"2025-10-02","cat":"cat14","destinoId":"","desc":"vuelo bs as [Transferencia/QR]"},{"id":"1775737349397pfsi","tipo":"gasto","monto":18000.0,"date":"2025-10-24","cat":"cat1","destinoId":"","desc":"café plaza españa franco y cami [Transferencia/QR]"},{"id":"1775737349397gpuh","tipo":"gasto","monto":30000.0,"date":"2025-10-25","cat":"cat10","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349397fxsn","tipo":"gasto","monto":7000.0,"date":"2025-10-18","cat":"cat1","destinoId":"","desc":"nachos con cheddar [Transferencia/QR]"},{"id":"1775737349397yird","tipo":"gasto","monto":5750.0,"date":"2025-10-25","cat":"cat1","destinoId":"","desc":"tostado yof [Efectivo]"},{"id":"1775737349397bbhv","tipo":"gasto","monto":9500.0,"date":"2025-11-02","cat":"cat1","destinoId":"","desc":"ccomida ypf [Efectivo]"},{"id":"1775737349397iohv","tipo":"gasto","monto":14550.0,"date":"2025-10-31","cat":"cat1","destinoId":"","desc":"comida ypf [Efectivo]"},{"id":"1775737349397pnjv","tipo":"gasto","monto":26500.0,"date":"2025-10-31","cat":"cat1","destinoId":"","desc":"almuerzo con cami [Transferencia/QR]"},{"id":"1775737349397qtyt","tipo":"gasto","monto":20000.0,"date":"2025-10-31","cat":"cat1","destinoId":"","desc":"lomito y fernet en casa [Transferencia/QR]"},{"id":"1775737349398ajtx","tipo":"gasto","monto":16500.0,"date":"2025-10-02","cat":"cat1","destinoId":"","desc":"mistica [Efectivo]"},{"id":"1775737349398hhmi","tipo":"gasto","monto":90905.0,"date":"2025-10-31","cat":"cat14","destinoId":"","desc":"sandalias [Transferencia/QR]"},{"id":"1775737349398oirf","tipo":"gasto","monto":20000.0,"date":"2025-10-04","cat":"cat8","destinoId":"","desc":"gin corteza [Transferencia/QR]"},{"id":"1775737349398ttoa","tipo":"gasto","monto":17000.0,"date":"2025-10-04","cat":"cat1","destinoId":"","desc":"asado con los pibes [Transferencia/QR]"},{"id":"1775737349398anmi","tipo":"gasto","monto":22000.0,"date":"2025-10-06","cat":"cat14","destinoId":"","desc":"entrada cosquin rock [Transferencia/QR]"},{"id":"1775737349398ogtp","tipo":"gasto","monto":4500.0,"date":"2025-10-06","cat":"cat1","destinoId":"","desc":"pizzas agus [Transferencia/QR]"},{"id":"1775737349398eimt","tipo":"gasto","monto":16500.0,"date":"2025-10-07","cat":"cat1","destinoId":"","desc":"pizzas cami [Transferencia/QR]"},{"id":"1775737349398ukwa","tipo":"gasto","monto":30000.0,"date":"2025-10-08","cat":"cat10","destinoId":"","desc":"nafta ypf [Efectivo]"},{"id":"1775737349398lvxv","tipo":"gasto","monto":4000.0,"date":"2025-10-08","cat":"cat1","destinoId":"","desc":"panadería [Efectivo]"},{"id":"1775737349398feua","tipo":"gasto","monto":5200.0,"date":"2025-10-08","cat":"cat12","destinoId":"","desc":"regalo naqui [Efectivo]"},{"id":"1775737349398eufl","tipo":"gasto","monto":8000.0,"date":"2025-10-09","cat":"cat1","destinoId":"","desc":"café cami [Transferencia/QR]"},{"id":"1775737349398tqoe","tipo":"gasto","monto":30000.0,"date":"2025-10-11","cat":"cat1","destinoId":"","desc":"campo h [Transferencia/QR]"},{"id":"1775737349398yfew","tipo":"gasto","monto":5600.0,"date":"2025-10-12","cat":"cat8","destinoId":"","desc":"birras kiosco sabado [Transferencia/QR]"},{"id":"1775737349398vxgm","tipo":"gasto","monto":10042.0,"date":"2025-10-12","cat":"cat1","destinoId":"","desc":"caramelos de miel [Transferencia/QR]"},{"id":"1775737349398nkqr","tipo":"gasto","monto":31400.0,"date":"2025-10-12","cat":"cat2","destinoId":"","desc":"pizzas y birras con cami [Transferencia/QR]"},{"id":"1775737349398imfc","tipo":"gasto","monto":5000.0,"date":"2025-10-14","cat":"cat1","destinoId":"","desc":"pollo en lo del gero [Transferencia/QR]"},{"id":"1775737349398xkqq","tipo":"gasto","monto":11000.0,"date":"2025-10-14","cat":"cat1","destinoId":"","desc":"diago en lo del eche [Transferencia/QR]"},{"id":"1775737349398srzh","tipo":"gasto","monto":17240.0,"date":"2025-10-15","cat":"cat1","destinoId":"","desc":"pizzas gran 7 [Transferencia/QR]"},{"id":"1775737349398ykyu","tipo":"gasto","monto":9400.0,"date":"2025-10-15","cat":"cat7","destinoId":"","desc":"futbol gran 7 [Transferencia/QR]"},{"id":"1775737349398cjyj","tipo":"gasto","monto":31150.0,"date":"2025-10-15","cat":"cat1","destinoId":"","desc":"desayuno mami [Transferencia/QR]"},{"id":"1775737349398fpxx","tipo":"ingreso","monto":6050.0,"date":"2025-10-15","cat":"ingreso","destinoId":"","desc":"cobro chupa de más [Efectivo]"},{"id":"1775737349398mkej","tipo":"gasto","monto":8700.0,"date":"2025-10-15","cat":"cat1","destinoId":"","desc":"milanesa de soja [Efectivo]"},{"id":"1775737349398ouaa","tipo":"gasto","monto":5800.0,"date":"2025-10-16","cat":"cat1","destinoId":"","desc":"carlitos facu ucc [Efectivo]"},{"id":"1775737349398walk","tipo":"gasto","monto":30000.0,"date":"2025-10-17","cat":"cat10","destinoId":"","desc":"nafta ypf [Efectivo]"},{"id":"1775737349398upct","tipo":"gasto","monto":42500.0,"date":"2025-10-17","cat":"cat1","destinoId":"","desc":"qpartamento con cami [Transferencia/QR]"},{"id":"1775737349398xmef","tipo":"gasto","monto":22000.0,"date":"2025-10-17","cat":"cat9","destinoId":"","desc":"despedida fede ponce [Transferencia/QR]"},{"id":"1775737349398svmp","tipo":"gasto","monto":8000.0,"date":"2025-10-18","cat":"cat1","destinoId":"","desc":"helado con pachu [Efectivo]"},{"id":"1775737349398xbfj","tipo":"gasto","monto":5650.0,"date":"2025-10-19","cat":"cat1","destinoId":"","desc":"merienda pachu [Efectivo]"},{"id":"1775737349398qhok","tipo":"gasto","monto":35900.0,"date":"2025-10-21","cat":"cat12","destinoId":"","desc":"regalo día de la madre [Transferencia/QR]"},{"id":"1775737349398rnqh","tipo":"gasto","monto":6600.0,"date":"2025-10-21","cat":"cat13","destinoId":"","desc":"van kif [Transferencia/QR]"},{"id":"1775737349398lsna","tipo":"gasto","monto":16200.0,"date":"2025-10-21","cat":"cat12","destinoId":"","desc":"vino martin [Transferencia/QR]"},{"id":"1775737349398updy","tipo":"gasto","monto":10500.0,"date":"2025-10-21","cat":"cat1","destinoId":"","desc":"pizza nueva córdoba [Efectivo]"},{"id":"1775737349398wvta","tipo":"gasto","monto":10500.0,"date":"2025-10-21","cat":"cat7","destinoId":"","desc":"futbol gran 7 [Transferencia/QR]"},{"id":"1775737349398kqsz","tipo":"gasto","monto":60000.0,"date":"2025-10-24","cat":"cat14","destinoId":"","desc":"fer psicóloga dos sesiones [Transferencia/QR]"},{"id":"1775737349398iaon","tipo":"gasto","monto":21500.0,"date":"2025-10-25","cat":"cat9","destinoId":"","desc":"cruz [Transferencia/QR]"},{"id":"1775737349398svev","tipo":"ingreso","monto":1300000.0,"date":"2025-11-02","cat":"ingreso","destinoId":"","desc":"SUELDO NOVIEMBRE [Transferencia/QR]"},{"id":"1775737349398mnvq","tipo":"gasto","monto":14000.0,"date":"2025-11-03","cat":"cat1","destinoId":"","desc":"Almuerzo [Transferencia/QR]"},{"id":"1775737349398sayi","tipo":"gasto","monto":36960.0,"date":"2025-11-03","cat":"cat1","destinoId":"","desc":"carpinteria cami [Transferencia/QR]"},{"id":"1775737349398rtpi","tipo":"gasto","monto":54000.0,"date":"2025-11-03","cat":"cat9","destinoId":"","desc":"entrada egreso arqui [Transferencia/QR]"},{"id":"1775737349398vbqf","tipo":"gasto","monto":21250.0,"date":"2025-11-04","cat":"cat1","destinoId":"","desc":"Piza la gran 7 [Transferencia/QR]"},{"id":"1775737349398agsd","tipo":"gasto","monto":9333.0,"date":"2025-11-04","cat":"cat7","destinoId":"","desc":"Cancha de futbol [Transferencia/QR]"},{"id":"1775737349398unjz","tipo":"gasto","monto":27000.0,"date":"2025-11-05","cat":"cat14","destinoId":"","desc":"Entrada cosquin rock [Transferencia/QR]"},{"id":"1775737349398wyqw","tipo":"gasto","monto":7400.0,"date":"2025-11-06","cat":"cat1","destinoId":"","desc":"Empanadas facu [Transferencia/QR]"},{"id":"1775737349398pnrs","tipo":"gasto","monto":5000.0,"date":"2025-11-06","cat":"cat7","destinoId":"","desc":"futbol gran 7 [Transferencia/QR]"},{"id":"1775737349398uhbb","tipo":"gasto","monto":11600.0,"date":"2025-11-06","cat":"cat1","destinoId":"","desc":"empanadas en cas [Transferencia/QR]"},{"id":"1775737349398jpes","tipo":"gasto","monto":23000.0,"date":"2025-11-07","cat":"cat9","destinoId":"","desc":"After admin egreso [Transferencia/QR]"},{"id":"1775737349398laqe","tipo":"gasto","monto":7000.0,"date":"2025-11-07","cat":"cat8","destinoId":"","desc":"Vodka arqui [Transferencia/QR]"},{"id":"1775737349398rgih","tipo":"gasto","monto":30000.0,"date":"2025-11-07","cat":"cat10","destinoId":"","desc":"Nafta ypf [Transferencia/QR]"},{"id":"1775737349398koxa","tipo":"gasto","monto":2700.0,"date":"2025-11-07","cat":"cat8","destinoId":"","desc":"powerade [Transferencia/QR]"},{"id":"1775737349398bclv","tipo":"gasto","monto":5000.0,"date":"2025-11-07","cat":"cat14","destinoId":"","desc":"estacionamiento y uber [Efectivo]"},{"id":"1775737349398iezs","tipo":"gasto","monto":30000.0,"date":"2025-11-09","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349398cquz","tipo":"gasto","monto":4047.0,"date":"2025-11-09","cat":"cat1","destinoId":"","desc":"comida turci [Transferencia/QR]"},{"id":"1775737349398ppzt","tipo":"gasto","monto":12000.0,"date":"2025-11-11","cat":"cat14","destinoId":"","desc":"peluquero [Transferencia/QR]"},{"id":"1775737349398fzoy","tipo":"gasto","monto":21000.0,"date":"2025-11-12","cat":"cat1","destinoId":"","desc":"comida constan [Transferencia/QR]"},{"id":"1775737349398rskr","tipo":"gasto","monto":9334.0,"date":"2025-11-12","cat":"cat7","destinoId":"","desc":"futbol g7 [Transferencia/QR]"},{"id":"1775737349398rvyc","tipo":"gasto","monto":97200.0,"date":"2025-11-12","cat":"cat12","destinoId":"","desc":"collar cami [Transferencia/QR]"},{"id":"1775737349398sokb","tipo":"gasto","monto":30000.0,"date":"2025-11-12","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349398zxqx","tipo":"gasto","monto":40000.0,"date":"2025-11-13","cat":"cat14","destinoId":"","desc":"seña salon [Transferencia/QR]"},{"id":"1775737349398usnd","tipo":"gasto","monto":4500.0,"date":"2025-11-14","cat":"cat1","destinoId":"","desc":"helado facu [Transferencia/QR]"},{"id":"1775737349398jxve","tipo":"ingreso","monto":12000.0,"date":"2025-11-15","cat":"ingreso","destinoId":"","desc":"pago uver [Transferencia/QR]"},{"id":"1775737349398anbi","tipo":"gasto","monto":28000.0,"date":"2025-11-16","cat":"cat1","destinoId":"","desc":"pago la mística [Transferencia/QR]"},{"id":"1775737349398ofse","tipo":"gasto","monto":7300.0,"date":"2025-11-17","cat":"cat14","destinoId":"","desc":"uber calamaro [Transferencia/QR]"},{"id":"1775737349398rpud","tipo":"gasto","monto":12125.0,"date":"2025-11-16","cat":"cat8","destinoId":"","desc":"alcohol y pizzas clamaro [Transferencia/QR]"},{"id":"1775737349398ubqu","tipo":"gasto","monto":30000.0,"date":"2025-11-17","cat":"cat10","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349398fbxs","tipo":"gasto","monto":14100.0,"date":"2025-11-17","cat":"cat1","destinoId":"","desc":"la comanda [Transferencia/QR]"},{"id":"1775737349398awek","tipo":"gasto","monto":8400.0,"date":"2025-11-18","cat":"cat7","destinoId":"","desc":"futbol la gran 7 [Transferencia/QR]"},{"id":"1775737349398sqle","tipo":"gasto","monto":4000.0,"date":"2025-11-19","cat":"cat14","destinoId":"","desc":"pago peaje [Transferencia/QR]"},{"id":"1775737349398cvvh","tipo":"gasto","monto":4100.0,"date":"2025-11-20","cat":"cat11","destinoId":"","desc":"impresión neograf [Transferencia/QR]"},{"id":"1775737349398kfzm","tipo":"gasto","monto":95000.0,"date":"2025-11-21","cat":"cat1","destinoId":"","desc":"cita cami [Transferencia/QR]"},{"id":"1775737349398ioal","tipo":"gasto","monto":30000.0,"date":"2025-11-22","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349398qozi","tipo":"gasto","monto":5500.0,"date":"2025-11-23","cat":"cat1","destinoId":"","desc":"helado primos cami [Transferencia/QR]"},{"id":"1775737349398xwtw","tipo":"gasto","monto":10000.0,"date":"2025-11-23","cat":"cat14","destinoId":"","desc":"naranjitas varios [Efectivo]"},{"id":"1775737349398nxet","tipo":"gasto","monto":33100.0,"date":"2025-11-25","cat":"cat10","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349398dplw","tipo":"gasto","monto":33824.0,"date":"2025-11-26","cat":"cat14","destinoId":"","desc":"remera bigbix [Transferencia/QR]"},{"id":"1775737349398yulp","tipo":"ingreso","monto":6000.0,"date":"2025-11-26","cat":"ingreso","destinoId":"","desc":"pago uber matu [Transferencia/QR]"},{"id":"1775737349398ktda","tipo":"gasto","monto":5700.0,"date":"2025-11-26","cat":"cat2","destinoId":"","desc":"coca con cami [Transferencia/QR]"},{"id":"1775737349398ndjd","tipo":"gasto","monto":11700.0,"date":"2025-11-27","cat":"cat1","destinoId":"","desc":"chori con los pibes [Transferencia/QR]"},{"id":"1775737349398ylgi","tipo":"gasto","monto":44600.0,"date":"2025-11-27","cat":"cat1","destinoId":"","desc":"carpintería cami [Transferencia/QR]"},{"id":"1775737349398grjm","tipo":"gasto","monto":11000.0,"date":"2025-11-28","cat":"cat9","destinoId":"","desc":"after arqui unc [Transferencia/QR]"},{"id":"1775737349398rnaw","tipo":"gasto","monto":12000.0,"date":"2025-11-28","cat":"cat14","destinoId":"","desc":"uber vuelta egreso cami [Transferencia/QR]"},{"id":"1775737349398okas","tipo":"gasto","monto":15435.0,"date":"2025-11-29","cat":"cat1","destinoId":"","desc":"powers de más remedios breve [Transferencia/QR]"},{"id":"1775737349398hhhx","tipo":"gasto","monto":30000.0,"date":"2025-11-30","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349398izpw","tipo":"gasto","monto":33696.0,"date":"2025-11-29","cat":"cat1","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349398xnzw","tipo":"gasto","monto":30000.0,"date":"2025-11-30","cat":"cat10","destinoId":"","desc":"nafta YPF [Transferencia/QR]"},{"id":"1775737349398ssby","tipo":"ingreso","monto":1300000.0,"date":"2025-11-30","cat":"ingreso","destinoId":"","desc":"sueldo noviembre [Transferencia/QR]"},{"id":"1775737349398ebrf","tipo":"gasto","monto":52285.0,"date":"2025-12-02","cat":"cat12","destinoId":"","desc":"kora [Transferencia/QR]"},{"id":"1775737349398xije","tipo":"gasto","monto":22200.0,"date":"2025-12-02","cat":"cat2","destinoId":"","desc":"comida en la falda [Transferencia/QR]"},{"id":"1775737349398cyrn","tipo":"gasto","monto":24500.0,"date":"2025-12-03","cat":"cat1","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349398fjzr","tipo":"gasto","monto":27000.0,"date":"2025-12-04","cat":"cat14","destinoId":"","desc":"entrada cosquin [Transferencia/QR]"},{"id":"1775737349398gsxy","tipo":"gasto","monto":10200.0,"date":"2025-12-05","cat":"cat14","destinoId":"","desc":"tabaco [Transferencia/QR]"},{"id":"1775737349398sfiy","tipo":"gasto","monto":40000.0,"date":"2025-12-05","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349398xzre","tipo":"gasto","monto":106640.0,"date":"2025-12-05","cat":"cat14","destinoId":"","desc":"arbnb [Transferencia/QR]"},{"id":"1775737349398ypoy","tipo":"gasto","monto":46285.0,"date":"2025-12-06","cat":"cat1","destinoId":"","desc":"cordies la cumbre [Transferencia/QR]"},{"id":"1775737349398yfah","tipo":"gasto","monto":19445.0,"date":"2025-12-07","cat":"cat1","destinoId":"","desc":"super la cumbre [Transferencia/QR]"},{"id":"1775737349398lgcr","tipo":"gasto","monto":4800.0,"date":"2025-12-07","cat":"cat1","destinoId":"","desc":"desayuno la cumbre [Transferencia/QR]"},{"id":"1775737349398nimx","tipo":"gasto","monto":11500.0,"date":"2025-12-08","cat":"cat14","destinoId":"","desc":"recibida mili cosas [Transferencia/QR]"},{"id":"1775737349398qcjh","tipo":"gasto","monto":30000.0,"date":"2025-12-09","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349398hifc","tipo":"gasto","monto":15000.0,"date":"2025-12-10","cat":"cat1","destinoId":"","desc":"hamburguesa con los pibes [Transferencia/QR]"},{"id":"1775737349398cfnr","tipo":"gasto","monto":13000.0,"date":"2025-12-10","cat":"cat14","destinoId":"","desc":"peluquero [Transferencia/QR]"},{"id":"1775737349398elwg","tipo":"gasto","monto":22000.0,"date":"2025-12-11","cat":"cat1","destinoId":"","desc":"alvaro comida [Efectivo]"},{"id":"1775737349398vaxc","tipo":"gasto","monto":200000.0,"date":"2025-12-12","cat":"cat14","destinoId":"","desc":"paracaídas [Transferencia/QR]"},{"id":"1775737349398oerx","tipo":"gasto","monto":30000.0,"date":"2025-12-12","cat":"cat10","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349398pnan","tipo":"gasto","monto":36000.0,"date":"2025-12-12","cat":"cat10","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349398rvlr","tipo":"ingreso","monto":40000.0,"date":"2025-12-15","cat":"ingreso","destinoId":"","desc":"pago camila de la cumbre [Transferencia/QR]"},{"id":"1775737349399gmoi","tipo":"gasto","monto":19800.0,"date":"2025-12-13","cat":"cat8","destinoId":"","desc":"juntada en lo de gero [Transferencia/QR]"},{"id":"1775737349399ytaf","tipo":"gasto","monto":28800.0,"date":"2025-12-14","cat":"cat1","destinoId":"","desc":"picada que lleve a lo de cami [Transferencia/QR]"},{"id":"1775737349399vrfx","tipo":"gasto","monto":12400.0,"date":"2025-12-15","cat":"cat1","destinoId":"","desc":"café del día del oaracaidas [Transferencia/QR]"},{"id":"1775737349399yvyh","tipo":"gasto","monto":5500.0,"date":"2025-12-15","cat":"cat1","destinoId":"","desc":"regalo cumple ale [Transferencia/QR]"},{"id":"1775737349399vlwh","tipo":"gasto","monto":21500.0,"date":"2025-12-15","cat":"cat1","destinoId":"","desc":"comida en lo del mati [Transferencia/QR]"},{"id":"1775737349399jgqz","tipo":"gasto","monto":3000.0,"date":"2025-12-16","cat":"cat1","destinoId":"","desc":"criollos [Transferencia/QR]"},{"id":"1775737349399wybd","tipo":"gasto","monto":36500.0,"date":"2025-12-16","cat":"cat1","destinoId":"","desc":"comida en lo de agustin [Efectivo]"},{"id":"1775737349399xnji","tipo":"ingreso","monto":5000.0,"date":"2025-12-16","cat":"ingreso","destinoId":"","desc":"devolución regalo ale [Transferencia/QR]"},{"id":"1775737349399nlxu","tipo":"gasto","monto":2000.0,"date":"2025-12-16","cat":"cat1","destinoId":"","desc":"serví compras [Transferencia/QR]"},{"id":"1775737349399iugq","tipo":"gasto","monto":5500.0,"date":"2025-12-17","cat":"cat1","destinoId":"","desc":"serviconpras [Transferencia/QR]"},{"id":"1775737349399cqoa","tipo":"gasto","monto":25500.0,"date":"2025-12-18","cat":"cat1","destinoId":"","desc":"almuerzo recibida ucc [Transferencia/QR]"},{"id":"1775737349399ewrs","tipo":"gasto","monto":2000.0,"date":"2025-12-18","cat":"cat14","destinoId":"","desc":"peaje [Transferencia/QR]"},{"id":"1775737349399ciwu","tipo":"ingreso","monto":12000.0,"date":"2025-12-19","cat":"ingreso","destinoId":"","desc":"devolución por pago de picada [Transferencia/QR]"},{"id":"1775737349399xwoy","tipo":"gasto","monto":34100.0,"date":"2025-12-19","cat":"cat10","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349399ufke","tipo":"gasto","monto":39441.0,"date":"2025-12-20","cat":"cat8","destinoId":"","desc":"alcohol cumple mio [Transferencia/QR]"},{"id":"1775737349399oida","tipo":"gasto","monto":4000.0,"date":"2025-12-21","cat":"cat1","destinoId":"","desc":"pan casero falsa del carmen [Transferencia/QR]"},{"id":"1775737349399tiwk","tipo":"gasto","monto":3900.0,"date":"2025-12-22","cat":"cat14","destinoId":"","desc":"estacionamiento aeripuerto [Transferencia/QR]"},{"id":"1775737349399ovnx","tipo":"gasto","monto":54900.0,"date":"2025-12-23","cat":"cat7","destinoId":"","desc":"pago cuota natación [Transferencia/QR]"},{"id":"1775737349399pxur","tipo":"gasto","monto":22500.0,"date":"2025-12-23","cat":"cat1","destinoId":"","desc":"comida cami [Transferencia/QR]"},{"id":"1775737349399dvpw","tipo":"gasto","monto":11000.0,"date":"2025-12-25","cat":"cat8","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349399eboc","tipo":"gasto","monto":42519.0,"date":"2025-12-26","cat":"cat12","destinoId":"","desc":"maya vintage para mi [Transferencia/QR]"},{"id":"1775737349399qxsj","tipo":"gasto","monto":5750.0,"date":"2025-12-28","cat":"cat8","destinoId":"","desc":"molvento [Transferencia/QR]"},{"id":"1775737349399ayio","tipo":"gasto","monto":34700.0,"date":"2025-12-29","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349399penm","tipo":"gasto","monto":23500.0,"date":"2025-12-29","cat":"cat1","destinoId":"","desc":"leemos cita doble [Transferencia/QR]"},{"id":"1775737349399spbj","tipo":"gasto","monto":69532.0,"date":"2025-12-30","cat":"cat2","destinoId":"","desc":"hoda año nuevo [Transferencia/QR]"},{"id":"1775737349399fxrt","tipo":"ingreso","monto":13000.0,"date":"2025-12-31","cat":"ingreso","destinoId":"","desc":"pago uber año nuevo juli [Transferencia/QR]"},{"id":"1775737349399mgpj","tipo":"gasto","monto":30000.0,"date":"2026-01-03","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349399ikhg","tipo":"ingreso","monto":1400000.0,"date":"2026-01-02","cat":"ingreso","destinoId":"","desc":"sueldo enero 2026 [Transferencia/QR]"},{"id":"1775737349399sril","tipo":"gasto","monto":17500.0,"date":"2025-12-30","cat":"cat1","destinoId":"","desc":"cita doble agustín [Transferencia/QR]"},{"id":"1775737349399fsja","tipo":"gasto","monto":10500.0,"date":"2026-01-03","cat":"cat13","destinoId":"","desc":"tabaco la esquinita [Transferencia/QR]"},{"id":"1775737349399ilwa","tipo":"gasto","monto":27000.0,"date":"2026-01-04","cat":"cat14","destinoId":"","desc":"entrada cos jun rock [Transferencia/QR]"},{"id":"1775737349399ejyt","tipo":"ingreso","monto":400000.0,"date":"2026-01-04","cat":"ingreso","destinoId":"","desc":"transferencia andrea [Transferencia/QR]"},{"id":"1775737349399ghqd","tipo":"gasto","monto":75800.0,"date":"2026-01-05","cat":"cat1","destinoId":"","desc":"comida [Transferencia/QR]"},{"id":"1775737349399yixo","tipo":"gasto","monto":13000.0,"date":"2026-01-06","cat":"cat14","destinoId":"","desc":"peluquero [Transferencia/QR]"},{"id":"1775737349399nvbj","tipo":"gasto","monto":259762.0,"date":"2026-01-08","cat":"cat14","destinoId":"","desc":"reserva posada [Transferencia/QR]"},{"id":"1775737349399fnnc","tipo":"gasto","monto":26862.0,"date":"2026-01-08","cat":"cat1","destinoId":"","desc":"comida [Transferencia/QR]"},{"id":"1775737349399nddt","tipo":"gasto","monto":40451.0,"date":"2026-01-08","cat":"cat1","destinoId":"","desc":"comida primer dia [Transferencia/QR]"},{"id":"1775737349399wqet","tipo":"gasto","monto":21668.0,"date":"2026-01-08","cat":"cat8","destinoId":"","desc":"alcochol playa [Transferencia/QR]"},{"id":"1775737349399dncy","tipo":"gasto","monto":21150.0,"date":"2026-01-09","cat":"cat1","destinoId":"","desc":"comida [Transferencia/QR]"},{"id":"1775737349399ghvb","tipo":"gasto","monto":10128.0,"date":"2026-01-10","cat":"cat1","destinoId":"","desc":"comida after p12 [Transferencia/QR]"},{"id":"1775737349399hxqc","tipo":"gasto","monto":108936.0,"date":"2026-01-10","cat":"cat1","destinoId":"","desc":"compra mayorista super [Transferencia/QR]"},{"id":"1775737349399chnr","tipo":"gasto","monto":5200.0,"date":"2026-01-10","cat":"cat8","destinoId":"","desc":"alcohol brasil [Transferencia/QR]"},{"id":"1775737349399gbgx","tipo":"gasto","monto":20256.0,"date":"2026-01-10","cat":"cat8","destinoId":"","desc":"caipis brasil [Transferencia/QR]"},{"id":"1775737349399crpz","tipo":"gasto","monto":50362.0,"date":"2026-01-10","cat":"cat2","destinoId":"","desc":"cena con cami [Transferencia/QR]"},{"id":"1775737349399micq","tipo":"gasto","monto":48000.0,"date":"2026-01-12","cat":"cat9","destinoId":"","desc":"entrada el cuartito [Transferencia/QR]"},{"id":"1775737349399grpf","tipo":"gasto","monto":7512.0,"date":"2026-01-12","cat":"cat8","destinoId":"","desc":"caipis playa [Transferencia/QR]"},{"id":"1775737349399blqs","tipo":"gasto","monto":8402.0,"date":"2026-01-13","cat":"cat14","destinoId":"","desc":"uber brasil [Transferencia/QR]"},{"id":"1775737349399aouu","tipo":"gasto","monto":10352.0,"date":"2026-01-13","cat":"cat1","destinoId":"","desc":"papas playa [Transferencia/QR]"},{"id":"1775737349399wiyb","tipo":"gasto","monto":740.0,"date":"2026-01-14","cat":"cat2","destinoId":"","desc":"comida [Transferencia/QR]"},{"id":"1775737349399ztql","tipo":"gasto","monto":6185.0,"date":"2026-01-14","cat":"cat14","destinoId":"","desc":"uber [Transferencia/QR]"},{"id":"1775737349399bpxd","tipo":"gasto","monto":8929.0,"date":"2026-01-14","cat":"cat8","destinoId":"","desc":"gaseosos y agua enfermo [Transferencia/QR]"},{"id":"1775737349399mrcg","tipo":"gasto","monto":6341.0,"date":"2026-01-14","cat":"cat14","destinoId":"","desc":"termómetro y remedios [Transferencia/QR]"},{"id":"1775737349399mxpk","tipo":"gasto","monto":14648.0,"date":"2026-01-15","cat":"cat14","destinoId":"","desc":"uber [Transferencia/QR]"},{"id":"1775737349399rylw","tipo":"gasto","monto":62307.0,"date":"2026-01-15","cat":"cat9","destinoId":"","desc":"boliche naqui [Transferencia/QR]"},{"id":"1775737349399hlot","tipo":"gasto","monto":16253.0,"date":"2026-01-16","cat":"cat8","destinoId":"","desc":"alcohol mar do rosa [Transferencia/QR]"},{"id":"1775737349399tdzx","tipo":"gasto","monto":11938.0,"date":"2026-01-16","cat":"cat1","destinoId":"","desc":"buffet [Transferencia/QR]"},{"id":"1775737349399bmlb","tipo":"gasto","monto":72007.0,"date":"2026-01-17","cat":"cat1","destinoId":"","desc":"bar playa [Transferencia/QR]"},{"id":"1775737349399ppih","tipo":"gasto","monto":40000.0,"date":"2026-01-17","cat":"cat9","destinoId":"","desc":"entrada mar do rosa [Transferencia/QR]"},{"id":"1775737349399fvft","tipo":"gasto","monto":50194.0,"date":"2026-01-18","cat":"cat2","destinoId":"","desc":"almuerzo playa [Transferencia/QR]"},{"id":"1775737349399qxoc","tipo":"gasto","monto":49337.0,"date":"2026-01-18","cat":"cat12","destinoId":"","desc":"regalos [Transferencia/QR]"},{"id":"1775737349399hqnw","tipo":"gasto","monto":19960.0,"date":"2026-01-19","cat":"cat14","destinoId":"","desc":"ojotas brasil [Transferencia/QR]"},{"id":"1775737349399dmct","tipo":"gasto","monto":256674.0,"date":"2026-01-19","cat":"cat14","destinoId":"","desc":"pago trafic [Transferencia/QR]"},{"id":"1775737349399iajs","tipo":"gasto","monto":10874.0,"date":"2026-01-19","cat":"cat1","destinoId":"","desc":"comida aeropuerto [Transferencia/QR]"},{"id":"1775737349399tvnm","tipo":"ingreso","monto":131500.0,"date":"2026-01-21","cat":"ingreso","destinoId":"","desc":"devolución plata split [Transferencia/QR]"},{"id":"1775737349399vafw","tipo":"gasto","monto":6500.0,"date":"2026-01-22","cat":"cat1","destinoId":"","desc":"gastos baires [Transferencia/QR]"},{"id":"1775737349399afep","tipo":"ingreso","monto":2850.0,"date":"2026-01-22","cat":"ingreso","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349399hgri","tipo":"gasto","monto":30000.0,"date":"2026-01-22","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349399qwdx","tipo":"gasto","monto":15000.0,"date":"2026-01-23","cat":"cat1","destinoId":"","desc":"mística mili [Transferencia/QR]"},{"id":"1775737349399xyqv","tipo":"gasto","monto":13000.0,"date":"2026-01-26","cat":"cat1","destinoId":"","desc":"comidq teatro [Transferencia/QR]"},{"id":"1775737349399cbdl","tipo":"gasto","monto":33000.0,"date":"2026-01-27","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349399eevz","tipo":"gasto","monto":17500.0,"date":"2026-01-28","cat":"cat7","destinoId":"","desc":"padel [Transferencia/QR]"},{"id":"1775737349399pgmz","tipo":"gasto","monto":3000.0,"date":"2026-01-28","cat":"cat7","destinoId":"","desc":"estacionamiento padel [Transferencia/QR]"},{"id":"1775737349399yhvi","tipo":"gasto","monto":12000.0,"date":"2026-02-28","cat":"cat14","destinoId":"","desc":"cine con pelli [Transferencia/QR]"},{"id":"1775737349399dqcx","tipo":"gasto","monto":16750.0,"date":"2026-01-30","cat":"cat1","destinoId":"","desc":"asado en lo de olocco [Transferencia/QR]"},{"id":"1775737349399sjkz","tipo":"gasto","monto":9600.0,"date":"2026-01-30","cat":"cat8","destinoId":"","desc":"coca y birras cami [Transferencia/QR]"},{"id":"1775737349399lese","tipo":"gasto","monto":75000.0,"date":"2026-01-31","cat":"cat2","destinoId":"","desc":"delmoon con cami [Transferencia/QR]"},{"id":"1775737349399ubsk","tipo":"gasto","monto":9835.0,"date":"2026-01-31","cat":"cat14","destinoId":"","desc":"pastilla del día después cami [Transferencia/QR]"},{"id":"1775737349399ohob","tipo":"ingreso","monto":1500000.0,"date":"2026-02-02","cat":"ingreso","destinoId":"","desc":"sueldo febrero [Transferencia/QR]"},{"id":"1775737349399dmbu","tipo":"gasto","monto":39700.0,"date":"2026-02-03","cat":"cat10","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349399yhrg","tipo":"gasto","monto":18000.0,"date":"2026-02-04","cat":"cat7","destinoId":"","desc":"padel [Transferencia/QR]"},{"id":"1775737349399gahg","tipo":"gasto","monto":3200.0,"date":"2026-02-04","cat":"cat1","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349399lyzd","tipo":"gasto","monto":25000.0,"date":"2026-02-05","cat":"cat9","destinoId":"","desc":"cumple licho [Transferencia/QR]"},{"id":"1775737349399ieds","tipo":"gasto","monto":1538.0,"date":"2026-02-05","cat":"cat14","destinoId":"","desc":"preservativo [Transferencia/QR]"},{"id":"1775737349399lgnq","tipo":"gasto","monto":24500.0,"date":"2026-02-05","cat":"cat1","destinoId":"","desc":"asado eche y mística en lo de franco [Transferencia/QR]"},{"id":"1775737349399knrw","tipo":"gasto","monto":28000.0,"date":"2026-02-05","cat":"cat14","destinoId":"","desc":"cosquin rock [Transferencia/QR]"},{"id":"1775737349399vnox","tipo":"gasto","monto":11300.0,"date":"2026-02-06","cat":"cat1","destinoId":"","desc":"comida full [Transferencia/QR]"},{"id":"1775737349399uztg","tipo":"gasto","monto":7700.0,"date":"2026-02-07","cat":"cat13","destinoId":"","desc":"tabaco la bodeguita [Transferencia/QR]"},{"id":"1775737349399ypqk","tipo":"gasto","monto":23050.0,"date":"2026-02-07","cat":"cat8","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349399ldfd","tipo":"gasto","monto":30000.0,"date":"2026-02-07","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349399azux","tipo":"gasto","monto":29506.0,"date":"2026-02-08","cat":"cat1","destinoId":"","desc":"pizzas campo cami [Transferencia/QR]"},{"id":"1775737349399ehsg","tipo":"gasto","monto":8664.0,"date":"2026-02-10","cat":"cat1","destinoId":"","desc":" [Efectivo]"},{"id":"1775737349399weic","tipo":"gasto","monto":20500.0,"date":"2026-02-03","cat":"cat7","destinoId":"","desc":"nafta [Transferencia/QR]"},{"id":"1775737349399wbqt","tipo":"gasto","monto":5000.0,"date":"2026-02-03","cat":"cat1","destinoId":"","desc":"huevos agus [Transferencia/QR]"},{"id":"1775737349399ozcj","tipo":"gasto","monto":36000.0,"date":"2026-02-12","cat":"cat1","destinoId":"","desc":"cena mami [Transferencia/QR]"},{"id":"1775737349399rsdl","tipo":"gasto","monto":35860.0,"date":"2026-02-13","cat":"cat1","destinoId":"","desc":"carpintería con cami [Transferencia/QR]"},{"id":"1775737349399enmt","tipo":"gasto","monto":14000.0,"date":"2026-02-13","cat":"cat10","destinoId":"","desc":"nafta [Efectivo]"},{"id":"1775737349399hbyk","tipo":"gasto","monto":219500.0,"date":"2026-02-15","cat":"cat2","destinoId":"","desc":"cosquin rock 2026 [Transferencia/QR]"},{"id":"1775737349399yqqb","tipo":"gasto","monto":7200.0,"date":"2026-02-18","cat":"cat9","destinoId":"","desc":"carlos paz pulga [Transferencia/QR]"},{"id":"1775737349399gype","tipo":"gasto","monto":13000.0,"date":"2026-02-19","cat":"cat14","destinoId":"","desc":"peluquero [Transferencia/QR]"},{"id":"1775737349399oigc","tipo":"gasto","monto":2940.0,"date":"2026-02-19","cat":"cat1","destinoId":"","desc":"nahuel [Transferencia/QR]"},{"id":"1775737349399flgz","tipo":"gasto","monto":30000.0,"date":"2026-02-19","cat":"cat10","destinoId":"","desc":"ypf donato [Transferencia/QR]"},{"id":"1775737349399yzyj","tipo":"gasto","monto":52878.0,"date":"2026-02-19","cat":"cat8","destinoId":"","desc":"gatorade recibida [Transferencia/QR]"},{"id":"1775737349399oeih","tipo":"gasto","monto":20000.0,"date":"2026-02-19","cat":"cat2","destinoId":"","desc":"comida con los pibes [Transferencia/QR]"},{"id":"1775737349399xagc","tipo":"gasto","monto":9180.0,"date":"2026-02-22","cat":"cat1","destinoId":"","desc":"facturas camila [Transferencia/QR]"},{"id":"1775737349400djsu","tipo":"gasto","monto":5990.0,"date":"2026-02-23","cat":"cat12","destinoId":"","desc":"regalo agus [Transferencia/QR]"},{"id":"1775737349400zdkt","tipo":"gasto","monto":32400.0,"date":"2026-02-24","cat":"cat10","destinoId":"","desc":"Nafta ypf [Transferencia/QR]"},{"id":"1775737349400mixu","tipo":"gasto","monto":15000.0,"date":"2026-02-25","cat":"cat9","destinoId":"","desc":"entrada pagada a franklin [Transferencia/QR]"},{"id":"1775737349400sieq","tipo":"gasto","monto":30400.0,"date":"2026-02-26","cat":"cat1","destinoId":"","desc":"comida en lo de nino [Transferencia/QR]"},{"id":"1775737349400mjqi","tipo":"gasto","monto":42400.0,"date":"2026-03-02","cat":"cat2","destinoId":"","desc":"mac con la enana [Transferencia/QR]"},{"id":"1775737349400wtul","tipo":"gasto","monto":27000.0,"date":"2026-03-02","cat":"cat14","destinoId":"","desc":"cosquin rock [Transferencia/QR]"},{"id":"1775737349400euli","tipo":"gasto","monto":23287.0,"date":"2026-03-03","cat":"cat1","destinoId":"","desc":"fajitas [Transferencia/QR]"},{"id":"1775737349400anhy","tipo":"gasto","monto":4275.0,"date":"2026-03-07","cat":"cat2","destinoId":"","desc":"puchos [Transferencia/QR]"},{"id":"1775737349400ajyj","tipo":"ingreso","monto":1500000.0,"date":"2026-03-01","cat":"ingreso","destinoId":"","desc":"sueldo ypf [Transferencia/QR]"},{"id":"1775737349400pjcc","tipo":"gasto","monto":30953.0,"date":"2026-03-09","cat":"cat11","destinoId":"","desc":"libr cointeligencia [Transferencia/QR]"},{"id":"1775737349400eqho","tipo":"gasto","monto":40000.0,"date":"2026-03-10","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349400tutg","tipo":"gasto","monto":31300.0,"date":"2026-03-10","cat":"cat2","destinoId":"","desc":"cafe panicafe [Transferencia/QR]"},{"id":"1775737349400swjm","tipo":"gasto","monto":15500.0,"date":"2026-03-11","cat":"cat2","destinoId":"","desc":"la mística hamburguesas [Transferencia/QR]"},{"id":"1775737349400hgds","tipo":"gasto","monto":12000.0,"date":"2026-03-12","cat":"cat2","destinoId":"","desc":"wort [Transferencia/QR]"},{"id":"1775737349400hkmu","tipo":"gasto","monto":8000.0,"date":"2026-02-13","cat":"cat13","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349400oopo","tipo":"gasto","monto":40000.0,"date":"2026-03-14","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349400hkaq","tipo":"gasto","monto":13400.0,"date":"2026-03-14","cat":"cat8","destinoId":"","desc":"bermut [Transferencia/QR]"},{"id":"1775737349400hdvz","tipo":"gasto","monto":11700.0,"date":"2026-03-14","cat":"cat2","destinoId":"","desc":"garita cafe [Transferencia/QR]"},{"id":"1775737349400lqqg","tipo":"gasto","monto":9300.0,"date":"2026-03-14","cat":"cat1","destinoId":"","desc":"rúcula [Transferencia/QR]"},{"id":"1775737349400efez","tipo":"gasto","monto":510.0,"date":"2026-03-15","cat":"cat1","destinoId":"","desc":"asado pibes ucc [Transferencia/QR]"},{"id":"1775737349400pftq","tipo":"gasto","monto":46000.0,"date":"2026-03-23","cat":"cat12","destinoId":"","desc":"regalo ciri lamber [Transferencia/QR]"},{"id":"1775737349400bufg","tipo":"gasto","monto":3300.0,"date":"2026-03-18","cat":"cat1","destinoId":"","desc":"barrita [Transferencia/QR]"},{"id":"1775737349400voet","tipo":"gasto","monto":16500.0,"date":"2026-03-19","cat":"cat1","destinoId":"","desc":"carpintería [Transferencia/QR]"},{"id":"1775737349400vrig","tipo":"gasto","monto":31000.0,"date":"2026-03-20","cat":"cat1","destinoId":"","desc":"merienda pa y ma [Transferencia/QR]"},{"id":"1775737349400ikww","tipo":"gasto","monto":29100.0,"date":"2026-03-21","cat":"cat1","destinoId":"","desc":"comida en potrero [Transferencia/QR]"},{"id":"1775737349400crcq","tipo":"gasto","monto":53300.0,"date":"2026-03-21","cat":"cat1","destinoId":"","desc":"cena campo cami [Transferencia/QR]"},{"id":"1775737349400pheo","tipo":"gasto","monto":21050.0,"date":"2026-03-23","cat":"cat1","destinoId":"","desc":"almuerzo la gloria [Transferencia/QR]"},{"id":"1775737349400brmd","tipo":"gasto","monto":40000.0,"date":"2026-03-24","cat":"cat10","destinoId":"","desc":"nafta ypf [Transferencia/QR]"},{"id":"1775737349400adnj","tipo":"gasto","monto":20000.0,"date":"2026-03-24","cat":"cat1","destinoId":"","desc":"pago mac cami [Transferencia/QR]"},{"id":"1775737349400jtvf","tipo":"gasto","monto":15000.0,"date":"2026-03-26","cat":"cat12","destinoId":"","desc":"regalo alvaro [Transferencia/QR]"},{"id":"1775737349400kaug","tipo":"gasto","monto":26215.0,"date":"2026-03-26","cat":"cat1","destinoId":"","desc":"cena bodegas [Transferencia/QR]"},{"id":"1775737349400sfbo","tipo":"gasto","monto":14000.0,"date":"2026-03-27","cat":"cat14","destinoId":"","desc":"peluquero [Transferencia/QR]"},{"id":"1775737349400cmpc","tipo":"gasto","monto":39942.0,"date":"2026-03-27","cat":"cat9","destinoId":"","desc":"barceló y recibida [Transferencia/QR]"},{"id":"1775737349400mynk","tipo":"gasto","monto":30500.0,"date":"2026-03-28","cat":"cat1","destinoId":"","desc":"cena casa de cami [Transferencia/QR]"},{"id":"1775737349400ybmf","tipo":"gasto","monto":30360.0,"date":"2026-03-30","cat":"cat1","destinoId":"","desc":"merienda rubens [Transferencia/QR]"},{"id":"1775737349400eptz","tipo":"gasto","monto":40000.0,"date":"2026-03-31","cat":"cat2","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349400nbur","tipo":"gasto","monto":16000.0,"date":"2026-04-16","cat":"cat14","destinoId":"","desc":"lavado auto [Transferencia/QR]"},{"id":"1775737349400uijl","tipo":"gasto","monto":27000.0,"date":"2026-03-31","cat":"cat14","destinoId":"","desc":"entrada cosquin rock [Transferencia/QR]"},{"id":"1775737349400vbfo","tipo":"gasto","monto":46000.0,"date":"2026-04-03","cat":"cat2","destinoId":"","desc":"la vitto [Transferencia/QR]"},{"id":"1775737349400ylsg","tipo":"gasto","monto":40000.0,"date":"2026-04-03","cat":"cat10","destinoId":"","desc":" [Transferencia/QR]"},{"id":"1775737349400vfzr","tipo":"gasto","monto":15000.0,"date":"2026-04-04","cat":"cat12","destinoId":"","desc":"regalo cumple nino [Transferencia/QR]"},{"id":"1775737349400efie","tipo":"gasto","monto":12888.0,"date":"2026-03-31","cat":"cat1","destinoId":"","desc":"sanguche de entraña [Transferencia/QR]"},{"id":"1775737349400bykn","tipo":"ingreso","monto":1550000.0,"date":"2026-04-04","cat":"ingreso","destinoId":"","desc":"sueldo gomeria [Transferencia/QR]"}];
+const PLANILLA_CATS = [{"id":"cat1","name":"Comida","color":"#f59e0b","nature":"gasto"},{"id":"cat2","name":"Salidas","color":"#d97706","nature":"gasto"},{"id":"cat3","name":"Transporte","color":"#2563eb","nature":"gasto"},{"id":"cat4","name":"Ropa/accesorios","color":"#9333ea","nature":"gasto"},{"id":"cat5","name":"Salud","color":"#16a34a","nature":"gasto"},{"id":"cat6","name":"Suscripciones","color":"#0891b2","nature":"gasto"},{"id":"cat7","name":"Gym/Deporte","color":"#65a30d","nature":"gasto"},{"id":"cat8","name":"Alcohol/Bebidas","color":"#b45309","nature":"gasto"},{"id":"cat9","name":"Boliches","color":"#db2777","nature":"gasto"},{"id":"cat10","name":"Nafta","color":"#64748b","nature":"gasto"},{"id":"cat11","name":"Auto","color":"#475569","nature":"gasto"},{"id":"cat12","name":"Regalos","color":"#e11d48","nature":"gasto"},{"id":"cat13","name":"Tabaco","color":"#78716c","nature":"gasto"},{"id":"cat14","name":"Otros","color":"#6b7280","nature":"gasto"},{"id":"cat21","name":"Brasil","color":"#16a34a","nature":"gasto"},{"id":"cat22","name":"Recitales","color":"#c026d3","nature":"gasto"},{"id":"cat23","name":"Peluqueria","color":"#0284c7","nature":"gasto"},{"id":"cat24","name":"Planes afuera","color":"#ea580c","nature":"gasto"},{"id":"cat25","name":"Cine","color":"#7c3aed","nature":"gasto"},{"id":"cat26","name":"Psicologo","color":"#0d9488","nature":"gasto"},{"id":"cat27","name":"Librería/Uni","color":"#8b5cf6","nature":"gasto"},{"id":"cat15","name":"Pentagom","color":"#16a34a","nature":"ingreso"},{"id":"cat16","name":"Estacion","color":"#0891b2","nature":"ingreso"},{"id":"cat17","name":"Gomería","color":"#f59e0b","nature":"ingreso"},{"id":"cat18","name":"Devol a favor","color":"#5856d6","nature":"ingreso"},{"id":"cat19","name":"Cordeiro","color":"#64748b","nature":"ingreso"},{"id":"cat20","name":"Otros ingresos","color":"#86868b","nature":"ingreso"}];
+// ── STORAGE ──
+async function load(key) {
+  try {
+    if (typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function') {
+      const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null;
+    }
+    const v = localStorage.getItem(key); return v ? JSON.parse(v) : null;
+  } catch(e) { return null; }
+}
+async function save(key, val) {
+  try {
+    if (typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function') {
+      await window.storage.set(key, JSON.stringify(val)); return;
+    }
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch(e) { console.error('save error:', e); }
+}
+
+// ── STATE ──
+let transactions=[], categories=[], destinos=[], meta=0, currentMonth='', tipo='ingreso', modalTipo='ingreso';
+let userConfig = { savingRateTarget: 20, alertsEnabled: true };
+let evolRange='6m'; // 6m | trim | sem | year
+// Period state
+let periodMode='month'; // month | quarter | semester | year | day
+let periodValue=''; // the selected value (e.g. '2025-07' or '2025' or '2025-Q3')
+let pieChart, barChart, savChart;
+let importData=[], importHeaders=[];
+let selectedNewCatColor='#f59e0b', selectedEcColor='#f59e0b', destinoImgData='';
+
+const PALETTE=['#f59e0b','#d97706','#b45309','#92400e','#16a34a','#2563eb','#dc2626','#9333ea','#0891b2','#db2777','#65a30d','#64748b'];
+const DEFAULT_CATS=[
+  {id:'cat1',name:'Comida',color:'#f59e0b',nature:'gasto'},
+  {id:'cat2',name:'Salidas',color:'#d97706',nature:'gasto'},
+  {id:'cat3',name:'Transporte',color:'#2563eb',nature:'gasto'},
+  {id:'cat4',name:'Ropa/accesorios',color:'#9333ea',nature:'gasto'},
+  {id:'cat5',name:'Salud',color:'#16a34a',nature:'gasto'},
+  {id:'cat6',name:'Suscripciones',color:'#0891b2',nature:'gasto'},
+  {id:'cat7',name:'Gym/Deporte',color:'#65a30d',nature:'gasto'},
+  {id:'cat8',name:'Alcohol/Bebidas',color:'#b45309',nature:'gasto'},
+  {id:'cat9',name:'Boliches',color:'#db2777',nature:'gasto'},
+  {id:'cat10',name:'Nafta',color:'#64748b',nature:'gasto'},
+  {id:'cat11',name:'Auto',color:'#475569',nature:'gasto'},
+  {id:'cat12',name:'Regalos',color:'#e11d48',nature:'gasto'},
+  {id:'cat13',name:'Tabaco',color:'#78716c',nature:'gasto'},
+  {id:'cat14',name:'Otros',color:'#6b7280',nature:'gasto'},
+  {id:'cat21',name:'Brasil',color:'#16a34a',nature:'gasto'},
+  {id:'cat22',name:'Recitales',color:'#c026d3',nature:'gasto'},
+  {id:'cat23',name:'Peluqueria',color:'#0284c7',nature:'gasto'},
+  {id:'cat24',name:'Planes afuera',color:'#ea580c',nature:'gasto'},
+  {id:'cat25',name:'Cine',color:'#7c3aed',nature:'gasto'},
+  {id:'cat26',name:'Psicologo',color:'#0d9488',nature:'gasto'},
+  {id:'cat27',name:'Librería/Uni',color:'#8b5cf6',nature:'gasto'},
+  {id:'cat15',name:'Pentagom',color:'#16a34a',nature:'ingreso'},
+  {id:'cat16',name:'Estacion',color:'#0891b2',nature:'ingreso'},
+  {id:'cat17',name:'Gomería',color:'#f59e0b',nature:'ingreso'},
+  {id:'cat18',name:'Devol a favor',color:'#5856d6',nature:'ingreso'},
+  {id:'cat19',name:'Cordeiro',color:'#64748b',nature:'ingreso'},
+  {id:'cat20',name:'Otros ingresos',color:'#86868b',nature:'ingreso'},
+];
+
+// ── THEME ──
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+  document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+  localStorage.setItem('theme', dark?'light':'dark');
+  setTimeout(()=>{ renderResumen(); renderEvolucion(); renderMeta(); }, 50);
+}
+(function(){
+  const t = localStorage.getItem('theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('themeBtn').textContent = t==='dark'?'☀️':'🌙'; });
+})();
+
+// ── INIT ──
+async function init() {
+  // Period selectors initialized after data loads (so year range is correct)
+  periodMode = 'month';
+  const now = new Date();
+  periodValue = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  currentMonth = periodValue;
+  document.getElementById('f-fecha').value=new Date().toISOString().slice(0,10);
+
+  // Google Sheets sync
+  const apiUrl = localStorage.getItem('sheets_api_url') || '';
+  
+  // First-ever open with no API URL → show setup screen
+  const hasEverConfigured = localStorage.getItem('sheets_configured');
+  if (!apiUrl && !hasEverConfigured) {
+    document.getElementById('setupScreen').style.display = 'flex';
+  }
+
+  // Load cached transactions from last sync
+  const storedTx=await load('txs'); transactions=storedTx||[];
+  const storedMeta=await load('meta'); meta=storedMeta||0;
+  const storedCats=await load('cats'); categories=storedCats||JSON.parse(JSON.stringify(DEFAULT_CATS));
+  const storedDest=await load('destinos'); destinos=storedDest||[];
+  const storedConfig=await load('userConfig'); if(storedConfig) userConfig={...userConfig,...storedConfig};
+  if(meta) document.getElementById('meta-input').value=meta;
+
+  setTipo('ingreso');
+  buildPeriodOptions();
+  // Small delay to ensure DOM is ready before rendering
+  setTimeout(() => renderAll(), 50);
+  renderPalette('newCatColors',c=>selectedNewCatColor=c, selectedNewCatColor);
+}
+
+// ── HELPERS ──
+function fmt(n){return '$'+Math.round(n).toLocaleString('es-AR');}
+function uid(){return Date.now()+Math.random().toString(36).slice(2,7);}
+// ── PERIOD SYSTEM ─────────────────────────────────────────────────────────────
+function buildPeriodOptions() {
+  const mSel = document.getElementById('periodMode');
+  const vSel = document.getElementById('periodValue');
+  if (!mSel || !vSel) return;
+  const mode = mSel.value;
+  vSel.innerHTML = '';
+  const now = new Date();
+  const opts = [];
+
+  if (mode === 'month') {
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      opts.push({val, label: d.toLocaleDateString('es-AR',{month:'long',year:'numeric'})});
+    }
+  } else if (mode === 'day') {
+    // Last 60 days
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const val = d.toISOString().slice(0,10);
+      opts.push({val, label: d.toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric'})});
+    }
+  } else if (mode === 'quarter') {
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i*3, 1);
+      const y = d.getFullYear(), q = Math.floor(d.getMonth()/3)+1;
+      const val = `${y}-Q${q}`;
+      if (!opts.find(o=>o.val===val)) opts.push({val, label:`T${q} ${y}`});
+    }
+  } else if (mode === 'semester') {
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i*6, 1);
+      const y = d.getFullYear(), s = d.getMonth()<6?1:2;
+      const val = `${y}-S${s}`;
+      if (!opts.find(o=>o.val===val)) opts.push({val, label:`${s}° semestre ${y}`});
+    }
+  } else if (mode === 'year') {
+    const startYear = Math.min(...transactions.map(t=>parseInt(t.date.slice(0,4))).filter(Boolean), now.getFullYear());
+    for (let y = now.getFullYear(); y >= startYear; y--) {
+      opts.push({val: String(y), label: String(y)});
+    }
+  }
+  opts.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.val; opt.textContent = o.label;
+    vSel.appendChild(opt);
+  });
+  if (!periodValue || !opts.find(o=>o.val===periodValue)) {
+    periodValue = opts[0]?.val || '';
+  }
+  vSel.value = periodValue;
+}
+
+function onPeriodModeChange() {
+  periodMode = document.getElementById('periodMode').value;
+  periodValue = '';
+  buildPeriodOptions();
+  currentMonth = periodValue;
+  renderAll();
+}
+function onPeriodChange() {
+  periodValue = document.getElementById('periodValue').value;
+  currentMonth = periodValue;
+  renderAll();
+}
+// Keep backward compat
+function onMonthChange(){ onPeriodChange(); }
+
+// Returns transactions for the current period
+function getTx(pval) {
+  if (!pval) return [];
+  if (pval.includes('-Q')) {
+    // Quarter: 2025-Q3
+    const [y,q] = pval.split('-Q');
+    const startM = (parseInt(q)-1)*3, endM = startM+2;
+    return transactions.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear()===parseInt(y) && d.getMonth()>=startM && d.getMonth()<=endM;
+    });
+  } else if (pval.includes('-S')) {
+    // Semester: 2025-S1
+    const [y,s] = pval.split('-S');
+    const startM = (parseInt(s)-1)*6, endM = startM+5;
+    return transactions.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear()===parseInt(y) && d.getMonth()>=startM && d.getMonth()<=endM;
+    });
+  } else if (pval.match(/^\d{4}$/)) {
+    // Year: 2025
+    return transactions.filter(t => t.date.startsWith(pval));
+  } else if (pval.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    // Day: 2025-07-05
+    return transactions.filter(t => t.date === pval);
+  } else {
+    // Month: 2025-07
+    return transactions.filter(t => t.date.startsWith(pval));
+  }
+}
+
+function getMonthLabel() {
+  try {
+    const vSel = document.getElementById('periodValue');
+    if (!vSel || !vSel.options || vSel.options.length === 0 || vSel.selectedIndex < 0) return periodValue || '';
+    return vSel.options[vSel.selectedIndex]?.text || periodValue || '';
+  } catch(e) { return periodValue || ''; }
+}
+
+// Returns array of period values for evolution chart
+function getEvolPeriods(range) {
+  // range: '6m'|'trim'|'sem'|'year'
+  const now = new Date();
+  if (range === 'trim') {
+    // Last 4 quarters
+    const periods = [];
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i*3, 1);
+      const y = d.getFullYear(), q = Math.floor(d.getMonth()/3)+1;
+      periods.push({val:`${y}-Q${q}`, label:`T${q} ${y}`});
+    }
+    return periods;
+  } else if (range === 'sem') {
+    // Last 4 semesters
+    const periods = [];
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i*6, 1);
+      const y = d.getFullYear(), s = d.getMonth()<6?1:2;
+      const val = `${y}-S${s}`;
+      if (!periods.find(p=>p.val===val)) periods.push({val, label:`${s}°S ${y}`});
+    }
+    return periods;
+  } else if (range === 'year') {
+    // Last 3 years
+    const periods = [];
+    for (let i = 2; i >= 0; i--) {
+      const y = now.getFullYear() - i;
+      periods.push({val: String(y), label: String(y)});
+    }
+    return periods;
+  } else {
+    // Default: last 6 months
+    return Array.from({length:6},(_,i)=>{
+      const d = new Date(now.getFullYear(), now.getMonth()-5+i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      return {val, label: d.toLocaleDateString('es-AR',{month:'short'})};
+    });
+  }
+}
+
+// Meta period helpers
+function getMetaPeriods() {
+  const mode = document.getElementById('meta-period-mode')?.value || 'month';
+  const now = new Date();
+  if (mode==='month') {
+    return Array.from({length:6},(_,i)=>{
+      const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);
+      const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      return {val, label:d.toLocaleDateString('es-AR',{month:'short'})};
+    });
+  } else if (mode==='quarter') {
+    const periods=[];
+    for(let i=3;i>=0;i--){
+      const d=new Date(now.getFullYear(),now.getMonth()-i*3,1);
+      const y=d.getFullYear(),q=Math.floor(d.getMonth()/3)+1;
+      const val=`${y}-Q${q}`;
+      if(!periods.find(p=>p.val===val)) periods.push({val,label:`T${q} ${y}`});
+    }
+    return periods;
+  } else if (mode==='semester') {
+    const periods=[];
+    for(let i=3;i>=0;i--){
+      const d=new Date(now.getFullYear(),now.getMonth()-i*6,1);
+      const y=d.getFullYear(),s=d.getMonth()<6?1:2;
+      const val=`${y}-S${s}`;
+      if(!periods.find(p=>p.val===val)) periods.push({val,label:`${s}°S ${y}`});
+    }
+    return periods;
+  } else {
+    const periods=[];
+    const start=Math.min(...transactions.map(t=>parseInt(t.date.slice(0,4))).filter(Boolean),now.getFullYear());
+    for(let y=now.getFullYear();y>=start;y--) periods.unshift({val:String(y),label:String(y)});
+    return periods;
+  }
+}
+function getCat(id){return categories.find(c=>c.id===id)||{name:id,color:'#64748b'};}
+function showToast(id,msg,ok=true){
+  const el=document.getElementById(id);
+  el.textContent=msg; el.className='toast show '+(ok?'ok':'err');
+  setTimeout(()=>el.className='toast '+(ok?'ok':'err'),2500);
+}
+function getMonthLabel(){
+  try {
+    const vSel = document.getElementById('periodValue');
+    if (!vSel || !vSel.options || vSel.options.length === 0 || vSel.selectedIndex < 0) return periodValue || '';
+    return vSel.options[vSel.selectedIndex]?.text || periodValue || '';
+  } catch(e) { return periodValue || ''; }
+}
+
+// ── TIPO ──
+function setTipo(t){
+  tipo=t;
+  ['ingreso','gasto','ahorro'].forEach(x=>document.getElementById('btn-'+x).className='tipo-btn'+(x===t?' active-'+x:''));
+  const showCat = t==='gasto'||t==='ingreso';
+  document.getElementById('cat-field').style.display=showCat?'flex':'none';
+  document.getElementById('cat-field').querySelector('label').textContent=t==='ingreso'?'Fuente de ingreso':'Categoría';
+  document.getElementById('destino-field').style.display=t==='ahorro'?'flex':'none';
+  if(showCat) renderCatSelect('f-cat','',t==='ingreso'?'ingreso':'gasto');
+}
+function setModalTipo(t, keepVal){
+  modalTipo=t;
+  ['ingreso','gasto','ahorro'].forEach(x=>document.getElementById('m-btn-'+x).className='tipo-btn'+(x===t?' active-'+x:''));
+  const showCat=t==='gasto'||t==='ingreso';
+  document.getElementById('m-cat-field').style.display=showCat?'flex':'none';
+  const lbl=document.getElementById('m-cat-field').querySelector('label');
+  if(lbl) lbl.textContent=t==='ingreso'?'Fuente de ingreso':'Categoría';
+  document.getElementById('m-destino-field').style.display=t==='ahorro'?'flex':'none';
+  if(showCat) renderCatSelect('m-cat', keepVal||'', t==='ingreso'?'ingreso':'gasto');
+}
+
+// ── PALETTE ──
+function renderPalette(containerId, onSel, current){
+  const cont=document.getElementById(containerId); if(!cont) return;
+  cont.innerHTML=PALETTE.map(c=>`<div class="color-opt${c===current?' sel':''}" style="background:${c}" title="${c}" onclick="selectColor('${containerId}','${c}')"></div>`).join('');
+  cont._onSel=onSel;
+}
+function selectColor(cid,color){
+  if(cid==='newCatColors') selectedNewCatColor=color;
+  if(cid==='ecColors') selectedEcColor=color;
+  document.getElementById(cid).querySelectorAll('.color-opt').forEach(el=>el.classList.toggle('sel',el.title===color));
+}
+
+// ── CATEGORIES ──
+function renderCatSelect(selId,val='',nature='gasto'){
+  const sel=document.getElementById(selId); if(!sel) return;
+  const filtered=categories.filter(c=>(c.nature||'gasto')===nature);
+  sel.innerHTML=filtered.map(c=>`<option value="${c.id}"${c.id===val?' selected':''}>${c.name}</option>`).join('');
+  // If val not found in this nature's list, select first option
+  if(val && !filtered.find(c=>c.id===val) && filtered.length>0) {
+    sel.value = filtered[0].id;
+  }
+}
+function renderDestinoSelect(selId,val=''){
+  const sel=document.getElementById(selId); if(!sel) return;
+  sel.innerHTML='<option value="">— Sin asignar —</option>'+destinos.map(d=>`<option value="${d.id}"${d.id===val?' selected':''}>${d.name}</option>`).join('');
+}
+async function addCat(){
+  const name=document.getElementById('new-cat-name').value.trim();
+  if(!name){return;}
+  if(categories.find(c=>c.name.toLowerCase()===name.toLowerCase())){alert('Ya existe');return;}
+  const nature=document.getElementById('new-cat-nature').value||'gasto';
+  categories.push({id:uid(),name,color:selectedNewCatColor,nature});
+  await save('cats',categories);
+  document.getElementById('new-cat-name').value='';
+  renderCats();
+  renderCatSelect('f-cat','',tipo==='ingreso'?'ingreso':'gasto');
+  renderCatSelect('m-cat','',modalTipo==='ingreso'?'ingreso':'gasto');
+}
+async function deleteCat(id){
+  if(transactions.some(t=>t.cat===id)){alert('Tiene transacciones asignadas. Reasignala primero.');return;}
+  if(!confirm('¿Eliminar categoría?')) return;
+  categories=categories.filter(c=>c.id!==id);
+  await save('cats',categories);
+  renderCats(); renderCatSelect('f-cat'); renderCatSelect('m-cat');
+}
+function openEditCat(id){
+  const cat=categories.find(c=>c.id===id); if(!cat) return;
+  selectedEcColor=cat.color;
+  document.getElementById('ec-id').value=id;
+  document.getElementById('ec-name').value=cat.name;
+  document.getElementById('ec-nature').value=cat.nature||'gasto';
+  renderPalette('ecColors',c=>selectedEcColor=c, cat.color);
+  openModal('editCatModal');
+}
+async function saveEditCat(){
+  const id=document.getElementById('ec-id').value;
+  const name=document.getElementById('ec-name').value.trim(); if(!name) return;
+  const nature=document.getElementById('ec-nature').value||'gasto';
+  categories=categories.map(c=>c.id===id?{...c,name,color:selectedEcColor,nature}:c);
+  await save('cats',categories);
+  closeModal('editCatModal');
+  renderCats();
+  renderCatSelect('f-cat','',tipo==='ingreso'?'ingreso':'gasto');
+  renderCatSelect('m-cat','',modalTipo==='ingreso'?'ingreso':'gasto');
+  renderAll();
+}
+function renderCats(){
+  const gasto=categories.filter(c=>(c.nature||'gasto')==='gasto');
+  const ingreso=categories.filter(c=>c.nature==='ingreso');
+  const makeChips=(list)=>list.map(c=>`
+    <div class="cat-chip">
+      <div class="cat-dot" style="background:${c.color}"></div>
+      <span>${c.name}</span>
+      <div class="cat-chip-btns">
+        <button onclick="openEditCat('${c.id}')" title="Editar">✏️</button>
+        <button class="del" onclick="deleteCat('${c.id}')" title="Eliminar">×</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('catGrid-gasto').innerHTML=makeChips(gasto)||'<span style="color:var(--muted-foreground);font-size:12px">Sin categorías</span>';
+  document.getElementById('catGrid-ingreso').innerHTML=makeChips(ingreso)||'<span style="color:var(--muted-foreground);font-size:12px">Sin categorías</span>';
+}
+
+// ── TRANSACCIONES ──
+async function guardarTx(){
+  const monto=parseFloat(document.getElementById('f-monto').value);
+  const fecha=document.getElementById('f-fecha').value;
+  if(!monto||monto<=0){showToast('toast','Ingresá un monto válido',false);return;}
+  if(!fecha){showToast('toast','Seleccioná una fecha',false);return;}
+  const editId=document.getElementById('edit-id').value;
+  const cat=(tipo==='gasto'||tipo==='ingreso')?document.getElementById('f-cat').value:tipo;
+  const destinoId=tipo==='ahorro'?document.getElementById('f-destino').value:'';
+  const desc=document.getElementById('f-desc').value.trim();
+  if(editId){
+    transactions=transactions.map(t=>t.id==editId?{...t,tipo,monto,date:fecha,cat,destinoId,desc}:t);
+    document.getElementById('edit-id').value='';
+    document.getElementById('formTitle').textContent='Nueva transacción';
+  } else {
+    transactions.push({id:uid(),tipo,monto,date:fecha,cat,destinoId,desc});
+  }
+  await save('txs',transactions);
+  document.getElementById('f-monto').value='';
+  document.getElementById('f-desc').value='';
+  showToast('toast',editId?'✓ Actualizado':'✓ Guardado');
+  renderAll();
+}
+async function deleteTx(id){
+  if(!confirm('¿Eliminar esta transacción?')) return;
+  transactions=transactions.filter(t=>t.id!=id);
+  await save('txs',transactions);
+  renderHistorial(); renderResumen(); renderMeta();
+}
+function editTx(id){
+  const t=transactions.find(x=>x.id==id); if(!t) return;
+  document.getElementById('m-edit-id').value=id;
+  document.getElementById('m-monto').value=t.monto;
+  document.getElementById('m-fecha').value=t.date;
+  document.getElementById('m-desc').value=t.desc||'';
+  // Set tipo first WITH the cat value so the select is populated with correct nature
+  setModalTipo(t.tipo, t.cat);
+  renderDestinoSelect('m-destino',t.destinoId||'');
+  openModal('editModal');
+}
+async function saveEditTx(){
+  const id=document.getElementById('m-edit-id').value;
+  const monto=parseFloat(document.getElementById('m-monto').value);
+  const fecha=document.getElementById('m-fecha').value;
+  if(!monto||monto<=0||!fecha) return;
+  const cat=(modalTipo==='gasto'||modalTipo==='ingreso')?document.getElementById('m-cat').value:modalTipo;
+  const destinoId=modalTipo==='ahorro'?document.getElementById('m-destino').value:'';
+  const desc=document.getElementById('m-desc').value.trim();
+  transactions=transactions.map(t=>t.id==id?{...t,tipo:modalTipo,monto,date:fecha,cat,destinoId,desc}:t);
+  await save('txs',transactions);
+  closeModal('editModal');
+  renderAll();
+}
+
+// ── DESTINOS ──
+function openDestinoModal(id){
+  destinoImgData='';
+  document.getElementById('d-img-preview').style.display='none';
+  document.getElementById('d-img-url').value='';
+  document.getElementById('d-edit-id').value='';
+  if(id){
+    const d=destinos.find(x=>x.id===id); if(!d) return;
+    document.getElementById('d-edit-id').value=id;
+    document.getElementById('d-nombre').value=d.name;
+    document.getElementById('d-desc').value=d.desc||'';
+    document.getElementById('d-meta').value=d.meta||'';
+    document.getElementById('destinoModalTitle').innerHTML=`Editar destino <button class="modal-close" onclick="closeModal('destinoModal')">×</button>`;
+    if(d.img){destinoImgData=d.img; document.getElementById('d-img-preview-img').src=d.img; document.getElementById('d-img-preview').style.display='block';}
+  } else {
+    document.getElementById('d-nombre').value=''; document.getElementById('d-desc').value=''; document.getElementById('d-meta').value='';
+    document.getElementById('destinoModalTitle').innerHTML=`Nuevo destino <button class="modal-close" onclick="closeModal('destinoModal')">×</button>`;
+  }
+  openModal('destinoModal');
+}
+async function saveDestino(){
+  const nombre=document.getElementById('d-nombre').value.trim(); if(!nombre){alert('Nombre requerido');return;}
+  const urlInput=document.getElementById('d-img-url').value.trim();
+  const img=destinoImgData||urlInput||'';
+  const data={id:document.getElementById('d-edit-id').value||uid(),name:nombre,desc:document.getElementById('d-desc').value.trim(),meta:parseFloat(document.getElementById('d-meta').value)||0,img};
+  const editId=document.getElementById('d-edit-id').value;
+  if(editId) destinos=destinos.map(d=>d.id===editId?data:d); else destinos.push(data);
+  await save('destinos',destinos);
+  closeModal('destinoModal');
+  renderDestinos(); renderDestinoSelect('f-destino'); renderDestinoSelect('m-destino');
+}
+async function deleteDestino(id){
+  if(!confirm('¿Eliminar destino?')) return;
+  destinos=destinos.filter(d=>d.id!==id);
+  await save('destinos',destinos);
+  renderDestinos(); renderDestinoSelect('f-destino'); renderDestinoSelect('m-destino');
+}
+function handleDestinoImgFile(inp){
+  const file=inp.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{destinoImgData=e.target.result; document.getElementById('d-img-preview-img').src=destinoImgData; document.getElementById('d-img-preview').style.display='block';};
+  reader.readAsDataURL(file);
+}
+function previewDestinoImg(){
+  const url=document.getElementById('d-img-url').value.trim();
+  if(url){destinoImgData=url; document.getElementById('d-img-preview-img').src=url; document.getElementById('d-img-preview').style.display='block';}
+}
+function renderDestinos(){
+  const grid=document.getElementById('destinosGrid'), empty=document.getElementById('destinos-empty');
+  if(!destinos.length){grid.innerHTML=''; empty.style.display='block'; return;}
+  empty.style.display='none';
+  grid.innerHTML=destinos.map(d=>{
+    const acc=transactions.filter(t=>t.tipo==='ahorro'&&t.destinoId===d.id).reduce((s,t)=>s+t.monto,0);
+    const pct=d.meta>0?Math.min(Math.round(acc/d.meta*100),100):0;
+    const imgHtml=d.img?`<img src="${d.img}" alt="${d.name}" onerror="this.parentElement.innerHTML='🗺'">`:`<span>🗺</span>`;
+    return`<div class="destino-card">
+      <div class="destino-img-wrap">${imgHtml}</div>
+      <div class="destino-body">
+        <div class="destino-name">${d.name}</div>
+        <div class="destino-desc">${d.desc||'&nbsp;'}</div>
+        ${d.meta>0?`<div class="destino-prog-bg"><div class="destino-prog${pct>=100?' ok':''}" style="width:${pct}%"></div></div>
+        <div class="destino-nums"><span class="cur${pct>=100?' ok':''}">${fmt(acc)}</span><span>${fmt(d.meta)}</span></div>`
+        :`<div style="font-size:12px;color:var(--muted-foreground)">${fmt(acc)} acumulado · sin meta</div>`}
+        <div class="destino-actions">
+          <button class="btn-secondary" style="flex:1;font-size:12px;justify-content:center" onclick="openDestinoModal('${d.id}')">✏️ Editar</button>
+          <button class="btn-destructive" onclick="deleteDestino('${d.id}')">×</button>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+
+// ── CHART COLORS ──
+function chartColors(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  return{
+    grid:   dark?'#38383a':'#e5e5ea',
+    tick:   dark?'#86868b':'#86868b',
+    green:  dark?'#30d158':'#34c759',
+    red:    dark?'#ff453a':'#ff3b30',
+    blue:   dark?'#0a84ff':'#0071e3',
+    sky:    dark?'#64d2ff':'#5ac8fa',
+    indigo: dark?'#5e5ce6':'#5856d6',
+    amber:  dark?'#ffd60a':'#ff9500',
+  };
+}
+
+// ── RENDER RESUMEN ──
+function renderResumen(){
+  const label=getMonthLabel();
+  const rLabel = document.getElementById('resumen-month-label'); if(rLabel) rLabel.textContent=label;
+  const txs=getTx(currentMonth);
+  const ingresos=txs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+  const gastos=txs.filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+  const ahorro=txs.filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+  document.getElementById('kpi-ingresos').textContent=fmt(ingresos);
+  document.getElementById('kpi-gastos').textContent=fmt(gastos);
+  document.getElementById('kpi-balance').textContent=fmt(ingresos-gastos-ahorro);
+  document.getElementById('kpi-ingresos-n').textContent=txs.filter(t=>t.tipo==='ingreso').length+' transacciones';
+  document.getElementById('kpi-gastos-n').textContent=txs.filter(t=>t.tipo==='gasto').length+' transacciones';
+  document.getElementById('kpi-ahorro-txt').textContent='Ahorro: '+fmt(ahorro);
+
+  const catData={}; categories.forEach(c=>catData[c.id]=0);
+  txs.filter(t=>t.tipo==='gasto').forEach(t=>{if(catData[t.cat]!==undefined)catData[t.cat]+=t.monto;});
+  const ids=Object.keys(catData).filter(id=>catData[id]>0);
+  const labels=ids.map(id=>getCat(id).name), data=ids.map(id=>catData[id]), colors=ids.map(id=>getCat(id).color);
+
+  if(pieChart) pieChart.destroy();
+  const ctx=document.getElementById('pieChart').getContext('2d');
+  if(!data.length){
+    ctx.clearRect(0,0,400,400); ctx.font='13px Inter'; ctx.fillStyle=chartColors().tick; ctx.textAlign='center';
+    ctx.fillText('Sin gastos este mes',200,110);
+    renderIngresosFuente(txs);
+  renderSavingRate(txs);
+  const distListEl = document.getElementById('distList');
+  if (distListEl) distListEl.innerHTML='<div style="color:var(--muted-foreground);font-size:13px">Sin datos</div>';
+  } else {
+    pieChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+      options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},cutout:'60%',animation:{duration:300}}});
+    const total=data.reduce((s,v)=>s+v,0);
+    document.getElementById('distList').innerHTML=ids.map((id,i)=>{
+      const pct=total>0?Math.round(data[i]/total*100):0;
+      return`<div class="dist-item">
+        <div class="dist-dot" style="background:${colors[i]}"></div>
+        <div class="dist-label">${labels[i]}</div>
+        <div class="dist-bar-wrap"><div class="dist-bar" style="width:${pct}%;background:${colors[i]}"></div></div>
+        <div class="dist-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── RENDER HISTORIAL ──
+function renderHistorial(){
+  const hLabel = document.getElementById('hist-month-label'); if(hLabel) hLabel.textContent=getMonthLabel();
+  const search=(document.getElementById('hist-search')?.value||'').toLowerCase();
+  const fTipo=document.getElementById('hist-filter-tipo')?.value||'';
+  let txs=getTx(currentMonth)
+    .filter(t=>!fTipo||t.tipo===fTipo)
+    .filter(t=>!search||(t.desc||'').toLowerCase().includes(search)||getCat(t.cat).name.toLowerCase().includes(search))
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const cont=document.getElementById('hist-container');
+  if(!txs.length){cont.innerHTML='<div class="empty">Sin transacciones para este mes 📭</div>';return;}
+  const cm={ingreso:'green',gasto:'red',ahorro:'amber'};
+  cont.innerHTML=`<div class="table-wrap"><table>
+    <thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción / Categoría</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+    <tbody>${txs.map(t=>{
+      const catLabel=t.tipo==='gasto'?getCat(t.cat).name:t.tipo==='ahorro'?(destinos.find(d=>d.id===t.destinoId)?.name||'—'):'—';
+      return`<tr>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)">${t.date.slice(5).replace('-','/')}</td>
+        <td><span class="badge badge-${t.tipo}">${t.tipo}</span></td>
+        <td style="color:var(--foreground);font-size:13px">${t.desc?`<span style="font-weight:500">${t.desc}</span> <span style="color:var(--muted-foreground)">· ${catLabel}</span>`:catLabel}</td>
+        <td style="text-align:right"><span class="mono ${cm[t.tipo]}">${fmt(t.monto)}</span></td>
+        <td><div class="actions-cell">
+          <button class="btn-icon edit" onclick="editTx('${t.id}')" title="Editar">✏️</button>
+          <button class="btn-icon del" onclick="deleteTx('${t.id}')" title="Eliminar">×</button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+// ── RENDER EVOLUCIÓN ──
+function setEvolRange(r, btn) {
+  evolRange = r;
+  document.querySelectorAll('[id^="evol-btn-"]').forEach(b=>b.className='tipo-btn');
+  btn.className='tipo-btn active-evol';
+  const titles={'6m':'Últimos 6 meses','trim':'Últimos 4 trimestres','sem':'Últimos 4 semestres','year':'Últimos 3 años'};
+  document.getElementById('evol-chart-title').textContent=`Ingresos vs Gastos — ${titles[r]}`;
+  renderEvolucion();
+}
+function renderEvolucion(){
+  const periods=getEvolPeriods(evolRange), cc=chartColors();
+  const labels=periods.map(p=>p.label);
+  const ingresos=periods.map(p=>getTx(p.val).filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0));
+  const gastos=periods.map(p=>getTx(p.val).filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0));
+  if(barChart) barChart.destroy();
+  barChart=new Chart(document.getElementById('barChart').getContext('2d'),{type:'bar',
+    data:{labels,datasets:[{label:'Ingresos',data:ingresos,backgroundColor:cc.green,borderRadius:4,borderWidth:0},{label:'Gastos',data:gastos,backgroundColor:cc.red,borderRadius:4,borderWidth:0}]},
+    options:{plugins:{legend:{labels:{font:{family:'Inter',size:12},color:cc.tick}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:12},color:cc.tick}},y:{grid:{color:cc.grid},ticks:{font:{family:'IBM Plex Mono',size:11},color:cc.tick,callback:v=>fmt(v)}}},animation:{duration:300}}});
+}
+
+// ── RENDER META ──
+function renderMeta(){
+  const metaMode=document.getElementById('meta-period-mode')?.value||'month';
+  const metaPeriodLabels={'month':'del mes','quarter':'del trimestre','semester':'del semestre','year':'del año'};
+  document.getElementById('meta-period-label').textContent='Ahorro '+metaPeriodLabels[metaMode];
+  const txs=getTx(currentMonth), ahorro=txs.filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+  document.getElementById('meta-actual').textContent=fmt(ahorro);
+  document.getElementById('meta-objetivo').textContent=fmt(meta);
+  const prog=document.getElementById('meta-progress');
+  if(meta>0){
+    prog.style.display='block';
+    const pct=Math.min(Math.round(ahorro/meta*100),100);
+    const bar=document.getElementById('progress-bar'); bar.style.width=pct+'%'; bar.className='progress-bar'+(pct>=100?' ok':'');
+    const el=document.getElementById('progress-pct'); el.textContent=pct+'%'; el.className='progress-pct'+(pct>=100?' ok':'');
+  } else prog.style.display='none';
+  const metaPeriods=getMetaPeriods(), cc=chartColors();
+  const labels=metaPeriods.map(p=>p.label);
+  const ahorroData=metaPeriods.map(p=>getTx(p.val).filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0));
+  const savTitles={'month':'Ahorro mensual — últimos 6 meses','quarter':'Ahorro por trimestre','semester':'Ahorro por semestre','year':'Ahorro anual'};
+  document.getElementById('sav-chart-title').textContent=savTitles[metaMode];
+  if(savChart) savChart.destroy();
+  savChart=new Chart(document.getElementById('savChart').getContext('2d'),{type:'bar',
+    data:{labels,datasets:[{label:'Ahorro',data:ahorroData,backgroundColor:cc.blue,borderRadius:4,borderWidth:0},
+      ...(meta>0?[{label:'Meta',data:Array(metaPeriods.length).fill(meta),type:'line',borderColor:cc.tick,borderDash:[5,5],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent'}]:[])
+    ]},
+    options:{plugins:{legend:{labels:{font:{family:'Inter',size:12},color:cc.tick}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:12},color:cc.tick}},y:{grid:{color:cc.grid},ticks:{font:{family:'IBM Plex Mono',size:11},color:cc.tick,callback:v=>fmt(v)}}},animation:{duration:300}}});
+}
+async function guardarMeta(){
+  const v=parseFloat(document.getElementById('meta-input').value); if(!v||v<0) return;
+  meta=v; await save('meta',meta); renderMeta();
+}
+
+// ── RENDER ALL ──
+function renderAll(){
+  renderResumen(); renderHistorial(); renderEvolucion(); renderMeta();
+  renderCats(); renderCatSelect('f-cat'); renderCatSelect('m-cat');
+  renderDestinoSelect('f-destino'); renderDestinoSelect('m-destino'); renderDestinos();
+}
+function renderAnalisis() {
+  const label = getMonthLabel();
+  const el = document.getElementById('analisis-period-label');
+  if(el) el.textContent = label;
+  renderAlertas();
+  renderProyeccion();
+  renderComparativaCats();
+  renderInflacion().catch(e=>console.warn('Inflacion:', e));
+}
+function renderVisual() {
+  renderBalanceChart();
+  renderHeatmap();
+  renderFlujoChart();
+}
+
+// ── MODALS ──
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+// ── TABS ──
+function switchTab(name,btn,mobile=false){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(mobile){
+    document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+  } else {
+    document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    // sync mobile
+    const idx=['resumen','cargar','historial','evolucion','meta','destinos','categorias','importar'].indexOf(name);
+    document.querySelectorAll('.mobile-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  }
+  if(name==='evolucion') setTimeout(renderEvolucion,50);
+  if(name==='meta') setTimeout(renderMeta,50);
+  if(name==='resumen') setTimeout(renderResumen,50);
+  if(name==='sheets') setTimeout(renderSheetsStatus,50);
+  if(name==='analisis') setTimeout(renderAnalisis,50);
+  if(name==='visual') setTimeout(renderVisual,50);
+  if(name==='config') setTimeout(renderConfig,50);
+}
+
+// ── EXPORT PDF ──
+function exportResumenPDF(){
+  const label=getMonthLabel();
+  const txs=getTx(currentMonth);
+  const ing=txs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+  const gas=txs.filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+  const aho=txs.filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+  const catData={}; categories.forEach(c=>catData[c.id]=0);
+  txs.filter(t=>t.tipo==='gasto').forEach(t=>{if(catData[t.cat]!==undefined)catData[t.cat]+=t.monto;});
+  const rows=categories.filter(c=>catData[c.id]>0).map(c=>`<tr><td>${c.name}</td><td style="text-align:right;font-family:monospace">${fmt(catData[c.id])}</td><td style="text-align:right;font-family:monospace">${gas>0?Math.round(catData[c.id]/gas*100):0}%</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen ${label}</title>
+  <style>body{font-family:Inter,sans-serif;padding:40px;max-width:680px;margin:0 auto;color:#262626}
+  h1{font-size:22px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px}
+  .sub{color:#6b7280;font-size:13px;margin-bottom:28px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+  .card{border:1px solid #e5e7eb;border-radius:6px;padding:14px}
+  .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#6b7280;margin-bottom:5px}
+  .val{font-family:monospace;font-size:20px;font-weight:700}
+  .g{color:#16a34a}.r{color:#dc2626}.a{color:#f59e0b}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#6b7280;padding-bottom:8px;border-bottom:2px solid #e5e7eb;text-align:left}
+  td{padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:13px}
+  @media print{body{padding:20px}}</style></head><body>
+  <h1>Resumen financiero</h1><p class="sub">${label}</p>
+  <div class="cards">
+    <div class="card"><div class="lbl">Ingresos</div><div class="val g">${fmt(ing)}</div></div>
+    <div class="card"><div class="lbl">Gastos</div><div class="val r">${fmt(gas)}</div></div>
+    <div class="card"><div class="lbl">Balance</div><div class="val a">${fmt(ing-gas-aho)}</div></div>
+  </div>
+  <table><thead><tr><th>Categoría</th><th style="text-align:right">Monto</th><th style="text-align:right">%</th></tr></thead>
+  <tbody>${rows||'<tr><td colspan="3" style="color:#6b7280">Sin gastos</td></tr>'}</tbody></table>
+  <p style="margin-top:28px;font-size:11px;color:#9ca3af">Exportado: ${new Date().toLocaleDateString('es-AR')}</p>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+function exportEvolucionPDF(){
+  const months=getEvolPeriods('6m').map(p=>p.val), label=getMonthLabel();
+  const rows=months.map(m=>{
+    const ing=getTx(m).filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+    const gas=getTx(m).filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+    const aho=getTx(m).filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+    const lbl=new Date(m+'-01').toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    return`<tr><td>${lbl}</td><td class="g r0" style="text-align:right;font-family:monospace;color:#16a34a">${fmt(ing)}</td><td style="text-align:right;font-family:monospace;color:#dc2626">${fmt(gas)}</td><td style="text-align:right;font-family:monospace;color:#f59e0b">${fmt(aho)}</td><td style="text-align:right;font-family:monospace">${fmt(ing-gas-aho)}</td></tr>`;
+  }).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Evolución</title>
+  <style>body{font-family:Inter,sans-serif;padding:40px;max-width:760px;margin:0 auto;color:#262626}
+  h1{font-size:22px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px}.sub{color:#6b7280;font-size:13px;margin-bottom:28px}
+  table{width:100%;border-collapse:collapse}th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#6b7280;padding-bottom:8px;border-bottom:2px solid #e5e7eb;text-align:left}th:not(:first-child){text-align:right}
+  td{padding:9px 0;border-bottom:1px solid #e5e7eb;font-size:13px}
+  @media print{body{padding:20px}}</style></head><body>
+  <h1>Evolución financiera</h1><p class="sub">Últimos 6 meses · ${label}</p>
+  <table><thead><tr><th>Mes</th><th style="text-align:right">Ingresos</th><th style="text-align:right">Gastos</th><th style="text-align:right">Ahorro</th><th style="text-align:right">Balance</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <p style="margin-top:28px;font-size:11px;color:#9ca3af">Exportado: ${new Date().toLocaleDateString('es-AR')}</p>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+// ── EXPORT EXCEL ──
+function exportHistorialExcel(){
+  const txs=getTx(currentMonth).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const data=[['Fecha','Tipo','Categoría','Destino','Descripción','Monto'],...txs.map(t=>[t.date,t.tipo,t.tipo==='gasto'?getCat(t.cat).name:'—',t.tipo==='ahorro'?(destinos.find(d=>d.id===t.destinoId)?.name||'—'):'—',t.desc||'',t.monto])];
+  const wb=XLSX.utils.book_new(), ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:12},{wch:10},{wch:16},{wch:16},{wch:32},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'Historial');
+  XLSX.writeFile(wb,`finanzas-${currentMonth}.xlsx`);
+}
+
+// ── BACKUP ──
+function exportBackupJSON(){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({transactions,categories,destinos,meta},null,2));
+  a.download=`finanzas-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+}
+async function restoreBackupJSON(inp){
+  const file=inp.files[0]; if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(data.transactions){transactions=data.transactions;await save('txs',transactions);}
+    if(data.categories){categories=data.categories;await save('cats',categories);}
+    if(data.destinos){destinos=data.destinos;await save('destinos',destinos);}
+    if(data.meta){meta=data.meta;await save('meta',meta);document.getElementById('meta-input').value=meta;}
+    renderAll(); showToast('restore-toast','✓ Backup restaurado correctamente');
+  }catch{showToast('restore-toast','✗ Archivo inválido',false);}
+  inp.value='';
+}
+
+// ── IMPORT ──
+async function handleImportFile(inp){
+  const file=inp.files[0]; if(!file) return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  let rows=[];
+  if(ext==='csv'){const text=await file.text(); rows=text.split('\n').map(l=>l.split(',').map(c=>c.replace(/^"|"$/g,'').trim())).filter(r=>r.some(c=>c));}
+  else{const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array',cellDates:true,dateNF:'yyyy-mm-dd'}); const ws=wb.Sheets[wb.SheetNames[0]]; rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});}
+  if(rows.length<2){alert('Archivo vacío o sin datos');return;}
+  importHeaders=rows[0].map(String); importData=rows.slice(1).filter(r=>r.some(c=>String(c).trim()));
+  renderImportMapping(); inp.value='';
+}
+function renderImportMapping(){
+  document.getElementById('import-mapping-section').style.display='block';
+  const fields=[{key:'date',label:'Fecha',req:true},{key:'tipo',label:'Tipo',req:true},{key:'monto',label:'Monto',req:true},{key:'cat',label:'Categoría',req:false},{key:'desc',label:'Descripción',req:false}];
+  document.getElementById('importMapping').innerHTML=fields.map(f=>`
+    <div class="import-map-row">
+      <span class="import-map-label">${f.label}${f.req?' *':''}</span>
+      <select id="map-${f.key}" style="flex:1;font-size:13px">
+        <option value="">— Ignorar —</option>
+        ${importHeaders.map((h,i)=>`<option value="${i}"${h.toLowerCase().includes(f.key.toLowerCase())||h.toLowerCase().includes(f.label.toLowerCase().split(' ')[0])?' selected':''}>${h}</option>`).join('')}
+      </select>
+    </div>`).join('');
+  const sample=importData.slice(0,3);
+  document.getElementById('import-preview').innerHTML=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted-foreground);margin-bottom:6px">Preview (${importData.length} filas)</div>
+  <div class="table-wrap" style="font-size:12px"><table>
+    <thead><tr>${importHeaders.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${sample.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function cancelImport(){document.getElementById('import-mapping-section').style.display='none'; importData=[]; importHeaders=[];}
+async function executeImport(){
+  const gc=key=>{const s=document.getElementById('map-'+key); return s?.value!==''?parseInt(s.value):-1;};
+  const dC=gc('date'),tC=gc('tipo'),mC=gc('monto'),cC=gc('cat'),dsc=gc('desc');
+  if(dC<0||tC<0||mC<0){showToast('import-toast','Asigná Fecha, Tipo y Monto',false);return;}
+  let added=0,skipped=0;
+  const tipoMap={ingreso:'ingreso',entrada:'ingreso',income:'ingreso',ingresos:'ingreso',gasto:'gasto',egreso:'gasto',expense:'gasto',gastos:'gasto',ahorro:'ahorro',saving:'ahorro'};
+  for(const row of importData){
+    const rawDate=String(row[dC]||'').trim();
+    const rawTipo=String(row[tC]||'').trim().toLowerCase();
+    const rawMonto=parseFloat(String(row[mC]||'').replace(/[$.]/g,'').replace(',','.'));
+    let date='';
+    if(rawDate.includes('/')){const p=rawDate.split('/'); date=p[0].length===4?`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`:`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;}
+    else if(rawDate.includes('-')) date=rawDate.slice(0,10);
+    else if(rawDate.match(/^\d+(\.\d+)?$/)){
+      // Excel serial date (number) — XLSX.js sometimes returns these as strings
+      const serial=parseFloat(rawDate);
+      date=new Date(Math.round((serial-25569)*86400*1000)).toISOString().slice(0,10);
+    } else if(!isNaN(Number(rawDate))) {
+      date=new Date(Math.round((Number(rawDate)-25569)*86400*1000)).toISOString().slice(0,10);
+    }
+    const tipo_=tipoMap[rawTipo];
+    if(!date||!tipo_||isNaN(rawMonto)||rawMonto<=0){skipped++;continue;}
+    const rawCat=cC>=0?String(row[cC]||'').trim():'';
+    // Extended match: exact name, partial match, or planilla->dashboard mapping
+    const planillaCatMap={'restaurante/bares':'cat2','alcohol/bebidas':'cat8','boliches':'cat9','nafta':'cat10','futbol/deportes':'cat7','libreria/universidad':'cat11','librería/universidad':'cat11','regalos':'cat12','tabaco/cigarrillo':'cat13'};
+    const matchedCat=rawCat?(
+      categories.find(c=>c.name.toLowerCase()===rawCat.toLowerCase())?.id ||
+      planillaCatMap[rawCat.toLowerCase()] ||
+      categories.find(c=>rawCat.toLowerCase().includes(c.name.toLowerCase()))?.id ||
+      categories[categories.length-1].id
+    ):categories[0].id;
+    const desc_=dsc>=0?String(row[dsc]||'').trim():'';
+    const cat_=tipo_==='gasto'?matchedCat:tipo_;
+    transactions.push({id:uid(),tipo:tipo_,monto:rawMonto,date,cat:cat_,destinoId:'',desc:desc_});
+    added++;
+  }
+  await save('txs',transactions);
+  renderAll();
+  showToast('import-toast',`✓ ${added} importadas${skipped>0?` · ${skipped} ignoradas`:''}`);
+  setTimeout(()=>{document.getElementById('import-mapping-section').style.display='none';importData=[];importHeaders=[];},3000);
+}
+
+// ── INGRESO POR FUENTE (Resumen) ─────────────────────────────────────────────
+let pieIngresoChart = null;
+function renderIngresosFuente(txs) {
+  const catData = {};
+  categories.filter(c=>c.nature==='ingreso').forEach(c=>catData[c.id]=0);
+  txs.filter(t=>t.tipo==='ingreso').forEach(t=>{
+    if(catData[t.cat]!==undefined) catData[t.cat]+=t.monto;
+    else catData['cat15']=(catData['cat15']||0)+t.monto;
+  });
+  const ids = Object.keys(catData).filter(id=>catData[id]>0);
+  const labels = ids.map(id=>getCat(id).name);
+  const data = ids.map(id=>catData[id]);
+  const colors = ids.map(id=>getCat(id).color);
+  const total = data.reduce((s,v)=>s+v,0);
+
+  if(pieIngresoChart) pieIngresoChart.destroy();
+  const ctx = document.getElementById('pieIngresoChart');
+  if(!ctx) return;
+  if(!data.length) {
+    const c=ctx.getContext('2d');
+    c.clearRect(0,0,400,400);
+    c.font='13px Inter'; c.fillStyle='#86868b'; c.textAlign='center';
+    c.fillText('Sin ingresos',200,90);
+    document.getElementById('distIngresoList').innerHTML='<div style="color:var(--muted-foreground);font-size:13px">Sin datos</div>';
+    return;
+  }
+  const cc = chartColors();
+  pieIngresoChart = new Chart(ctx.getContext('2d'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},cutout:'58%',animation:{duration:300}}
+  });
+  document.getElementById('distIngresoList').innerHTML = ids.map((id,i)=>{
+    const pct = total>0?Math.round(data[i]/total*100):0;
+    return `<div class="dist-item">
+      <div class="dist-dot" style="background:${colors[i]}"></div>
+      <div class="dist-label">${labels[i]}</div>
+      <div class="dist-bar-wrap"><div class="dist-bar" style="width:${pct}%;background:${colors[i]}"></div></div>
+      <div class="dist-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── SAVING RATE ───────────────────────────────────────────────────────────────
+function renderSavingRate(txs) {
+  const ingresos = txs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+  const ahorro = txs.filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+  const gastos = txs.filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+  const rate = ingresos>0 ? Math.round(ahorro/ingresos*100) : 0;
+  const spent = ingresos>0 ? Math.round(gastos/ingresos*100) : 0;
+  const el = document.getElementById('kpi-saving-rate');
+  const sub = document.getElementById('kpi-saving-rate-sub');
+  const target = userConfig.savingRateTarget || 20;
+  const halfTarget = Math.round(target/2);
+  if(el) { el.textContent = rate+'%'; el.style.color = rate>=target?'var(--green)':rate>=halfTarget?'var(--primary)':'var(--red)'; }
+  if(sub) sub.textContent = `${spent}% gastado · ${100-rate-spent}% restante`;
+}
+
+// ── ALERTAS ───────────────────────────────────────────────────────────────────
+function renderAlertas() {
+  const box = document.getElementById('alertas-list'); if(!box) return;
+  const txs = getTx(periodValue);
+  const ingresos = txs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+  const gastos = txs.filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+  const ahorro = txs.filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+
+  // Get last 3 months for comparison
+  const now = new Date();
+  const last3 = Array.from({length:3},(_,i)=>{
+    const d=new Date(now.getFullYear(),now.getMonth()-1-i,1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  });
+  const avgGasto = last3.map(m=>getTx(m).filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0));
+  const avgTotal = avgGasto.reduce((s,v)=>s+v,0)/(avgGasto.filter(v=>v>0).length||1);
+
+  const alertas = [];
+
+  // Alerta: gastos vs promedio
+  if(avgTotal>0 && gastos>0) {
+    const diff = Math.round((gastos-avgTotal)/avgTotal*100);
+    if(diff>20) alertas.push({icon:'🔴',title:`Gastos ${diff}% por encima de tu promedio`,sub:`Este período: ${fmt(gastos)} · Promedio: ${fmt(avgTotal)}`,badge:'badge-warn',badgeText:'+'+diff+'%'});
+    else if(diff<-10) alertas.push({icon:'🟢',title:`Gastos ${Math.abs(diff)}% por debajo de tu promedio`,sub:`Buen trabajo. Este período: ${fmt(gastos)} · Promedio: ${fmt(avgTotal)}`,badge:'badge-ok',badgeText:diff+'%'});
+  }
+
+  // Alerta: tasa de ahorro
+  const rate = ingresos>0?Math.round(ahorro/ingresos*100):0;
+  if(ingresos>0) {
+    const tgt = userConfig.savingRateTarget || 20;
+    if(rate<Math.round(tgt/2)) alertas.push({icon:'⚠️',title:`Tasa de ahorro baja: ${rate}% (meta: ${tgt}%)`,sub:`Estás lejos de tu objetivo. Ahorro: ${fmt(ahorro)}`,badge:'badge-warn',badgeText:rate+'%'});
+    else if(rate>=tgt) alertas.push({icon:'✅',title:`Meta de ahorro alcanzada: ${rate}%`,sub:`Superaste tu objetivo del ${tgt}%. Ahorro: ${fmt(ahorro)}`,badge:'badge-ok',badgeText:rate+'%'});
+    else alertas.push({icon:'⚡',title:`Tasa de ahorro: ${rate}% (meta: ${tgt}%)`,sub:`Estás cerca del objetivo. Ahorro: ${fmt(ahorro)}`,badge:'badge-info',badgeText:rate+'%'});
+  }
+
+  // Alerta: gastos por categoría
+  const catGastos = {};
+  txs.filter(t=>t.tipo==='gasto').forEach(t=>{ catGastos[t.cat]=(catGastos[t.cat]||0)+t.monto; });
+  const topCat = Object.entries(catGastos).sort((a,b)=>b[1]-a[1])[0];
+  if(topCat && gastos>0) {
+    const pct = Math.round(topCat[1]/gastos*100);
+    if(pct>40) alertas.push({icon:'📊',title:`${getCat(topCat[0]).name} representa el ${pct}% del gasto`,sub:`${fmt(topCat[1])} de ${fmt(gastos)} totales.`,badge:'badge-info',badgeText:pct+'%'});
+  }
+
+  // Balance negativo
+  if(ingresos>0 && (ingresos-gastos-ahorro)<0) {
+    alertas.push({icon:'❌',title:'Balance negativo este período',sub:`Gastaste ${fmt(gastos+ahorro)} pero ingresaste ${fmt(ingresos)}.`,badge:'badge-warn',badgeText:'Déficit'});
+  }
+
+  if(!alertas.length) { box.innerHTML='<div class="alerta-item"><div class="alerta-icon">✅</div><div class="alerta-body"><div class="alerta-title">Todo en orden</div><div class="alerta-sub">No hay alertas para este período.</div></div></div>'; return; }
+  box.innerHTML = alertas.map(a=>`<div class="alerta-item">
+    <div class="alerta-icon">${a.icon}</div>
+    <div class="alerta-body"><div class="alerta-title">${a.title}</div><div class="alerta-sub">${a.sub}</div></div>
+    <span class="alerta-badge ${a.badge}">${a.badgeText}</span>
+  </div>`).join('');
+}
+
+// ── PROYECCIÓN ────────────────────────────────────────────────────────────────
+function renderProyeccion() {
+  const el = document.getElementById('proyeccion-content'); if(!el) return;
+  if(periodMode !== 'month') { el.innerHTML='<span style="color:var(--muted-foreground)">Seleccioná vista mensual para ver la proyección.</span>'; return; }
+  const txs = getTx(periodValue);
+  const [y,m] = periodValue.split('-').map(Number);
+  const daysInMonth = new Date(y,m,0).getDate();
+  const today = new Date();
+  const isCurrentMonth = y===today.getFullYear()&&m===today.getMonth()+1;
+  const daysPassed = isCurrentMonth ? today.getDate() : daysInMonth;
+
+  const gastos = txs.filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+  const ingresos = txs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+  const proyGasto = daysPassed>0 ? Math.round(gastos/daysPassed*daysInMonth) : 0;
+  const dailyRate = daysPassed>0 ? Math.round(gastos/daysPassed) : 0;
+
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+    <div class="card"><div class="card-label">Gastado hasta hoy</div><div class="card-value red" style="font-size:18px">${fmt(gastos)}</div><div class="card-sub">Día ${daysPassed} de ${daysInMonth}</div></div>
+    <div class="card"><div class="card-label">Ritmo diario</div><div class="card-value" style="font-size:18px;color:var(--primary)">${fmt(dailyRate)}/día</div><div class="card-sub">${daysInMonth-daysPassed} días restantes</div></div>
+    <div class="card"><div class="card-label">Proyección fin de mes</div><div class="card-value ${proyGasto>ingresos?'red':'green'}" style="font-size:18px">${fmt(proyGasto)}</div><div class="card-sub">${proyGasto>ingresos?'⚠️ Supera ingresos':'✅ Dentro del ingreso'}</div></div>
+  </div>`;
+}
+
+// ── COMPARATIVA CATEGORÍAS MES ANTERIOR ──────────────────────────────────────
+function renderComparativaCats() {
+  const el = document.getElementById('comparativa-cats'); if(!el) return;
+  const txs = getTx(periodValue);
+  const [y,m] = periodValue.split('-').map(Number);
+  const prevMonth = new Date(y,m-2,1);
+  const prevVal = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth()+1).padStart(2,'0')}`;
+  const prevTxs = getTx(prevVal);
+
+  const cur={}, prev={};
+  txs.filter(t=>t.tipo==='gasto').forEach(t=>cur[t.cat]=(cur[t.cat]||0)+t.monto);
+  prevTxs.filter(t=>t.tipo==='gasto').forEach(t=>prev[t.cat]=(prev[t.cat]||0)+t.monto);
+
+  const allCats = [...new Set([...Object.keys(cur),...Object.keys(prev)])];
+  if(!allCats.length) { el.innerHTML='<div style="color:var(--muted-foreground);font-size:13px">Sin datos para comparar.</div>'; return; }
+
+  const maxVal = Math.max(...allCats.map(id=>Math.max(cur[id]||0,prev[id]||0)),1);
+  const sorted = allCats.sort((a,b)=>(cur[b]||0)-(cur[a]||0));
+
+  el.innerHTML = sorted.slice(0,8).map(id=>{
+    const c=cur[id]||0, p=prev[id]||0;
+    const delta = p>0?Math.round((c-p)/p*100):null;
+    const cat = getCat(id);
+    return `<div class="comp-row">
+      <div class="comp-label" title="${cat.name}"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${cat.color};margin-right:6px"></span>${cat.name}</div>
+      <div class="comp-bars">
+        <div class="comp-bar-row"><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:${Math.round(c/maxVal*100)}%;background:var(--red)"></div></div><div class="comp-val">${fmt(c)}</div></div>
+        <div class="comp-bar-row"><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:${Math.round(p/maxVal*100)}%;background:var(--border)"></div></div><div class="comp-val" style="color:var(--muted-foreground)">${fmt(p)}</div></div>
+      </div>
+      ${delta!==null?`<div class="comp-delta ${delta>0?'up':'down'}">${delta>0?'+':''}${delta}%</div>`:'<div class="comp-delta" style="color:var(--muted-foreground)">N/D</div>'}
+    </div>`;
+  }).join('') + `<div style="font-size:11px;color:var(--muted-foreground);margin-top:8px">🔴 Período actual &nbsp;⬜ Mes anterior</div>`;
+}
+
+// ── INFLACIÓN API (INDEC via datosgobar.gob.ar) ───────────────────────────────
+let inflacionData = null;
+let inflacionChart = null;
+async function fetchInflacion() {
+  // IPC Argentina nivel general (variación mensual % - INDEC)
+  // Datos actualizados a marzo 2026
+  const ipcMensual = [
+    {date:'2025-07', pct:3.7},
+    {date:'2025-08', pct:4.2},
+    {date:'2025-09', pct:3.5},
+    {date:'2025-10', pct:2.9},
+    {date:'2025-11', pct:2.4},
+    {date:'2025-12', pct:2.7},
+    {date:'2026-01', pct:2.3},
+    {date:'2026-02', pct:2.4},
+    {date:'2026-03', pct:3.7},
+    {date:'2026-04', pct:3.0},
+  ];
+  // Construir índice acumulado (base 100 en julio 2025)
+  let idx = 100;
+  const result = [];
+  for(const d of ipcMensual) {
+    result.push({date: d.date, ipc: Math.round(idx * 100) / 100});
+    idx = idx * (1 + d.pct/100);
+  }
+  return result;
+}
+async function renderInflacion() {
+  const el = document.getElementById('inflacion-status'); if(el) el.textContent = 'Calculando...';
+  if(!inflacionData) { inflacionData = await fetchInflacion(); }
+  const statusEl = document.getElementById('inflacion-status');
+
+  if(!inflacionData) {
+    if(statusEl) statusEl.textContent = '⚠️ Sin conexión a API INDEC';
+    return;
+  }
+  if(statusEl) statusEl.textContent = `✓ Datos INDEC · ${inflacionData[inflacionData.length-1]?.date||''}`;
+
+  // Get months with data
+  const _ip = getEvolPeriods('6m');
+  const months = _ip.map(p=>p.val);
+  if(!months || !months.length) return;
+
+  // Calculate real income adjusted by IPC
+  const baseIpc = inflacionData[inflacionData.length-1]?.ipc || 100;
+  const labels = [], nominalData = [], realData = [];
+
+  months.forEach(m => {
+    const ing = getTx(m).filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+    if(ing===0) return;
+    const ipcEntry = inflacionData.find(d=>d.date===m);
+    const ipc = ipcEntry?.ipc || baseIpc;
+    const real = Math.round(ing * (baseIpc/ipc));
+    labels.push(new Date(m+'-01').toLocaleDateString('es-AR',{month:'short'}));
+    nominalData.push(ing);
+    realData.push(real);
+  });
+
+  if(inflacionChart) inflacionChart.destroy();
+  const ctx = document.getElementById('inflacionChart'); if(!ctx) return;
+  const cc = chartColors();
+  inflacionChart = new Chart(ctx.getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Ingreso nominal',data:nominalData,backgroundColor:cc.green,borderRadius:4,borderWidth:0},
+      {label:'Ingreso real (ajustado)',data:realData,type:'line',borderColor:cc.blue,borderWidth:2,pointRadius:4,pointBackgroundColor:cc.blue,backgroundColor:'transparent',tension:0.3}
+    ]},
+    options:{plugins:{legend:{labels:{font:{family:'Inter',size:12},color:cc.tick}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:11},color:cc.tick}},
+              y:{grid:{color:cc.grid},ticks:{font:{family:'IBM Plex Mono',size:11},color:cc.tick,callback:v=>fmt(v)}}},
+      animation:{duration:300}}
+  });
+}
+
+// ── VISUAL: BALANCE ACUMULADO ─────────────────────────────────────────────────
+let balanceChart=null, flujoChart=null;
+function renderBalanceChart() {
+  const _periods = getEvolPeriods('6m');
+  const months = _periods.map(p=>p.val);
+  if(!months||!months.length) return;
+  const cc = chartColors();
+  let acum = 0;
+  const labels=[], data=[];
+  months.forEach(m=>{
+    const ing=getTx(m).filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0);
+    const gas=getTx(m).filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0);
+    const aho=getTx(m).filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0);
+    acum += ing-gas-aho;
+    labels.push(new Date(m+'-01').toLocaleDateString('es-AR',{month:'short'}));
+    data.push(acum);
+  });
+  if(balanceChart) balanceChart.destroy();
+  const ctx=document.getElementById('balanceChart'); if(!ctx) return;
+  balanceChart=new Chart(ctx.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Balance acumulado',data,borderColor:cc.blue,borderWidth:2.5,pointRadius:5,pointBackgroundColor:cc.blue,
+      backgroundColor:data.map(v=>v>=0?'rgba(0,113,227,0.08)':'rgba(255,59,48,0.08)'),fill:true,tension:0.3}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:11},color:cc.tick}},
+              y:{grid:{color:cc.grid},ticks:{font:{family:'IBM Plex Mono',size:11},color:cc.tick,callback:v=>fmt(v)}}},
+      animation:{duration:300}}
+  });
+}
+
+// ── VISUAL: HEATMAP ───────────────────────────────────────────────────────────
+function renderHeatmap() {
+  const el=document.getElementById('heatmap-container'); if(!el) return;
+  if(periodMode!=='month') { el.innerHTML='<div style="color:var(--muted-foreground);font-size:13px;padding:12px">Seleccioná vista mensual para ver el heatmap.</div>'; return; }
+  const [y,m]=periodValue.split('-').map(Number);
+  const daysInMonth=new Date(y,m,0).getDate();
+  const txs=getTx(periodValue).filter(t=>t.tipo==='gasto');
+  const byDay={};
+  txs.forEach(t=>{ const d=parseInt(t.date.slice(8)); byDay[d]=(byDay[d]||0)+t.monto; });
+  const maxDay=Math.max(...Object.values(byDay),1);
+  const firstDow=new Date(y,m-1,1).getDay();
+
+  const days=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  let html=`<div class="heatmap-grid">${days.map(d=>`<div class="heatmap-label">${d}</div>`).join('')}`;
+  for(let i=0;i<firstDow;i++) html+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const v=byDay[d]||0;
+    const pct=v/maxDay;
+    const alpha=Math.round(pct*0.85*100)/100;
+    const bg=v>0?`rgba(255,59,48,${Math.max(0.1,alpha)})`:'var(--secondary)';
+    const color=pct>0.5?'#fff':'var(--foreground)';
+    html+=`<div class="heatmap-day" style="background:${bg};color:${color}" title="${d}/${m}: ${fmt(v)}">${d}</div>`;
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+// ── VISUAL: FLUJO ─────────────────────────────────────────────────────────────
+function renderFlujoChart() {
+  const _fp = getEvolPeriods('6m');
+  const months=_fp.map(p=>p.val);
+  if(!months||!months.length) return;
+  const cc=chartColors();
+  const labels=months.map(m=>new Date(m+'-01').toLocaleDateString('es-AR',{month:'short'}));
+  const ing=months.map(m=>getTx(m).filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+t.monto,0));
+  const gas=months.map(m=>getTx(m).filter(t=>t.tipo==='gasto').reduce((s,t)=>s+t.monto,0));
+  const aho=months.map(m=>getTx(m).filter(t=>t.tipo==='ahorro').reduce((s,t)=>s+t.monto,0));
+  if(flujoChart) flujoChart.destroy();
+  const ctx=document.getElementById('flujoChart'); if(!ctx) return;
+  flujoChart=new Chart(ctx.getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Ingresos',data:ing,backgroundColor:cc.green,borderRadius:4,borderWidth:0},
+      {label:'Gastos',data:gas,backgroundColor:cc.red,borderRadius:4,borderWidth:0},
+      {label:'Ahorro',data:aho,backgroundColor:cc.blue,borderRadius:4,borderWidth:0}
+    ]},
+    options:{plugins:{legend:{labels:{font:{family:'Inter',size:12},color:cc.tick}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:11},color:cc.tick}},
+              y:{grid:{color:cc.grid},ticks:{font:{family:'IBM Plex Mono',size:11},color:cc.tick,callback:v=>fmt(v)}}},
+      animation:{duration:300}}
+  });
+}
+
+// ── GOOGLE SHEETS SYNC ────────────────────────────────────────────────────────
+function getApiUrl() { return localStorage.getItem('sheets_api_url') || ''; }
+
+function saveApiUrl() {
+  const url = document.getElementById('apiUrlInput').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    alert('La URL debe ser de Google Apps Script (https://script.google.com/...)');
+    return;
+  }
+  localStorage.setItem('sheets_api_url', url);
+  localStorage.setItem('sheets_configured', '1');
+  document.getElementById('setupScreen').style.display = 'none';
+  syncFromSheet();
+}
+
+function skipSetup() {
+  localStorage.setItem('sheets_configured', '1');
+  document.getElementById('setupScreen').style.display = 'none';
+  // Seed with embedded planilla data if no transactions yet
+  if (transactions.length === 0) {
+    transactions = JSON.parse(JSON.stringify(PLANILLA_TX));
+    save('txs', transactions);
+  }
+  renderAll();
+}
+
+function setSyncBar(state, msg, time='') {
+  const bar = document.getElementById('syncBar');
+  const msgEl = document.getElementById('syncBarMsg');
+  const timeEl = document.getElementById('syncBarTime');
+  bar.className = 'sync-bar ' + state;
+  bar.style.display = 'flex';
+  msgEl.textContent = msg;
+  timeEl.textContent = time;
+  if (state === 'ok') setTimeout(() => { bar.style.display = 'none'; }, 4000);
+}
+
+function syncFromSheet() {
+  const url = getApiUrl();
+  if (!url) {
+    document.getElementById('setupScreen').style.display = 'flex';
+    return;
+  }
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing');
+  btn.disabled = true;
+  setSyncBar('loading', 'Sincronizando con Google Sheets...');
+
+  // JSONP — única forma de llamar Apps Script desde un HTML local sin servidor
+  const cbName = 'gsCallback_' + Date.now();
+  const script = document.createElement('script');
+
+  window[cbName] = function(json) {
+    // Cleanup
+    delete window[cbName];
+    script.remove();
+    btn.classList.remove('syncing');
+    btn.disabled = false;
+    try {
+      if (!json.ok) throw new Error(json.error || 'Error del script');
+      transactions = json.data;
+      save('txs', transactions);
+      const now = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+      setSyncBar('ok', '✓ ' + transactions.length + ' transacciones sincronizadas', 'Última sync: ' + now);
+      localStorage.setItem('last_sync', now);
+      try { buildPeriodOptions(); } catch(e) { console.warn(e); }
+      try { renderAll(); } catch(e) { console.warn(e); }
+      try { renderSheetsStatus(); } catch(e) { console.warn(e); }
+    } catch(err) {
+      setSyncBar('err', '✗ ' + err.message);
+    }
+  };
+
+  script.onerror = function() {
+    delete window[cbName];
+    script.remove();
+    btn.classList.remove('syncing');
+    btn.disabled = false;
+    setSyncBar('err', '✗ No se pudo conectar. Verificá que la URL sea correcta y que el script esté implementado como "Aplicación web" con acceso "Cualquier persona".');
+  };
+
+  // Timeout fallback
+  setTimeout(function() {
+    if (window[cbName]) {
+      window[cbName]({ok: false, error: 'Timeout — el script tardó demasiado en responder'});
+    }
+  }, 15000);
+
+  script.src = url + '?callback=' + cbName;
+  document.head.appendChild(script);
+}
+
+// Auto-sync on load if URL is configured
+async function autoSync() {
+  const url = getApiUrl();
+  if (url) {
+    await syncFromSheet();
+  } else if (transactions.length === 0) {
+    // No URL configured and no cached data → load embedded planilla
+    transactions = JSON.parse(JSON.stringify(PLANILLA_TX));
+    await save('txs', transactions);
+    renderAll();
+  }
+}
+
+// ── PWA INSTALL ──────────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const banner = document.getElementById('pwaBanner');
+  banner.classList.remove('hidden');
+  banner.style.display = 'flex';
+});
+document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('pwaBanner').classList.add('hidden');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwaBanner').classList.add('hidden');
+});
+
+// ── USER CONFIG ──────────────────────────────────────────────────────────────
+async function saveConfig() {
+  const target = parseInt(document.getElementById('config-saving-target').value) || 20;
+  userConfig.savingRateTarget = Math.min(100, Math.max(1, target));
+  await save('userConfig', userConfig);
+  showToast('config-toast', `✓ Meta de ahorro guardada: ${userConfig.savingRateTarget}%`);
+  renderResumen();
+  renderAlertas();
+}
+function renderConfig() {
+  const inp = document.getElementById('config-saving-target');
+  if(inp) inp.value = userConfig.savingRateTarget || 20;
+  // Show ingreso cats
+  const grid = document.getElementById('catGrid-ingreso-config');
+  if(grid) {
+    const incomeCats = categories.filter(c=>c.nature==='ingreso');
+    grid.innerHTML = incomeCats.map(c=>`
+      <div class="cat-chip">
+        <div class="cat-dot" style="background:${c.color}"></div>
+        <span>${c.name}</span>
+      </div>`).join('') || '<span style="color:var(--muted-foreground);font-size:12px">Sin categorías de ingreso</span>';
+  }
+}
+
+// ── SHEETS CONFIG UI ─────────────────────────────────────────────────────────
+function saveApiUrl2() {
+  const url = document.getElementById('apiUrlInput2').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    alert('La URL debe ser de Google Apps Script (https://script.google.com/...)');
+    return;
+  }
+  localStorage.setItem('sheets_api_url', url);
+  localStorage.setItem('sheets_configured', '1');
+  renderSheetsStatus();
+  syncFromSheet();
+}
+function disconnectSheet() {
+  if (!confirm('¿Desconectar Google Sheets? Los datos en caché se mantendrán.')) return;
+  localStorage.removeItem('sheets_api_url');
+  renderSheetsStatus();
+}
+function renderSheetsStatus() {
+  try {
+    const url = getApiUrl();
+    const connView = document.getElementById('sheets-connected-view');
+    const discView = document.getElementById('sheets-disconnected-view');
+    if (!connView || !discView) return;
+    if (url) {
+      connView.style.display = 'block';
+      discView.style.display = 'none';
+      const short = url.length > 60 ? url.slice(0,57)+'...' : url;
+      const urlEl = document.getElementById('sheets-url-display');
+      const syncEl = document.getElementById('sheets-last-sync');
+      if (urlEl) urlEl.textContent = short;
+      if (syncEl) syncEl.textContent = localStorage.getItem('last_sync') || '—';
+    } else {
+      connView.style.display = 'none';
+      discView.style.display = 'block';
+    }
+  } catch(e) { console.warn('renderSheetsStatus:', e); }
+}
+
+// ── BACKUP REMINDER ───────────────────────────────────────────────────────────
+// Show backup bar if user has data (after init loads it)
+function checkBackupReminder() {
+  if (transactions.length > 0) {
+    const dismissed = sessionStorage.getItem('backup_bar_dismissed');
+    if (!dismissed) document.getElementById('backupBar').style.display = 'flex';
+  }
+}
+document.getElementById('backupBar').querySelector('.backup-bar-close').addEventListener('click', () => {
+  sessionStorage.setItem('backup_bar_dismissed', '1');
+});
+
+init().then(() => {
+  checkBackupReminder();
+  autoSync();
+});
+</script>
+</body>
+</html>
